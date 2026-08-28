@@ -1,0 +1,27 @@
+# Dependências
+node_modules
+.pnp
+.pnp.cjs
+
+# Build
+dist
+dist-ssr
+*.local
+*.tsbuildinfo
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Env
+.env
+.env.local
+.env.production
+.env*.local
