@@ -7,8 +7,6 @@ import type {
   Contato,
   Interacao,
   Brinde,
-  Campanha,
-  CampanhaParticipante,
   Treinamento,
   TreinamentoParticipante,
 } from '@/types'
@@ -19,8 +17,6 @@ interface DataContextValue {
   contatos: Contato[]
   interacoes: Interacao[]
   brindes: Brinde[]
-  campanhas: Campanha[]
-  campanhaParticipantes: CampanhaParticipante[]
   treinamentos: Treinamento[]
   treinamentoParticipantes: TreinamentoParticipante[]
   loading: boolean
@@ -38,8 +34,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [contatos, setContatos] = useState<Contato[]>([])
   const [interacoes, setInteracoes] = useState<Interacao[]>([])
   const [brindes, setBrindes] = useState<Brinde[]>([])
-  const [campanhas, setCampanhas] = useState<Campanha[]>([])
-  const [campanhaParticipantes, setCampanhaParticipantes] = useState<CampanhaParticipante[]>([])
   const [treinamentos, setTreinamentos] = useState<Treinamento[]>([])
   const [treinamentoParticipantes, setTreinamentoParticipantes] = useState<TreinamentoParticipante[]>([])
   const [loading, setLoading] = useState(false)
@@ -71,15 +65,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         .select('*, loja:lojas(*), contato:contatos_loja(*), vendedor:profiles!brindes_vendedor_responsavel_id_fkey(*)')
         .order('created_at', { ascending: false })
         .then(({ data }) => setBrindes((data as Brinde[]) ?? [])),
-      supabase
-        .from('campanhas')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .then(({ data }) => setCampanhas((data as Campanha[]) ?? [])),
-      supabase
-        .from('campanha_participantes')
-        .select('*, loja:lojas(*), contato:contatos_loja(*)')
-        .then(({ data }) => setCampanhaParticipantes((data as CampanhaParticipante[]) ?? [])),
       supabase
         .from('treinamentos')
         .select('*')
@@ -120,8 +105,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         contatos,
         interacoes,
         brindes,
-        campanhas,
-        campanhaParticipantes,
         treinamentos,
         treinamentoParticipantes,
         loading,

@@ -6,10 +6,12 @@ interface AuthContextValue {
   user: { id: string; email: string | null } | null
   profile: Profile | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error?: string }>
+  signIn: (username: string, password: string) => Promise<{ error?: string }>
   signOut: () => Promise<void>
   isAdmin: boolean
 }
+
+const USERNAME_DOMAIN = 'usuarios.construjota.com.br'
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
@@ -38,18 +40,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false)
         return
       }
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single()
-      setProfile((data as Profile) ?? null)
+      const loadedProfile = (data as Profile) ?? null
+      if (error || !loadedProfile?.ativo) {
+        await supabase.auth.signOut()
+        setProfile(null)
+        setLoading(false)
+        return
+      }
+      setProfile(loadedProfile)
       setLoading(false)
     }
     loadProfile()
   }, [user])
 
-  async function signIn(email: string, password: string) {
+  async function signIn(username: string, password: string) {
+    const normalizedUsername = username.trim().toLowerCase().replace(/\s+/g, '')
+    const email = `${normalizedUsername}@${USERNAME_DOMAIN}`
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     return { error: error?.message }
   }

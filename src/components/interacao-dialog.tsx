@@ -23,7 +23,7 @@ import { supabase } from '@/lib/supabase'
 import { useData } from '@/context/DataContext'
 import type { Interacao } from '@/types'
 
-const TIPOS = ['WhatsApp', 'Ligação', 'Visita', 'Brinde', 'Campanha', 'Treinamento', 'Observação']
+const TIPOS = ['WhatsApp', 'Ligação', 'Visita', 'Brinde', 'Treinamento', 'Observação']
 
 export function InteracaoDialog({
   open,

@@ -21,9 +21,9 @@ export default {
         brand: {
           black: '#111111',
           dark: '#1E1E1E',
-          yellow: '#FDBA12',
+          yellow: '#FFCA05',
           white: '#FFFFFF',
-          gray: '#F5F5F5',
+          gray: '#F7F6F3',
           muted: '#666666',
         },
         secondary: {

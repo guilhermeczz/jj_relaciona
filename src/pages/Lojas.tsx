@@ -76,25 +76,25 @@ export function Lojas() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Select value={fVendedor} onValueChange={setFVendedor}>
+        {isAdmin && <Select value={fVendedor || 'todos'} onValueChange={(value) => setFVendedor(value === 'todos' ? '' : value)}>
           <SelectTrigger className="sm:w-48">
             <SelectValue placeholder="Vendedor" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="todos">Todos</SelectItem>
             {vendedores.map((v) => (
               <SelectItem key={v.id} value={v.id}>
                 {v.nome}
               </SelectItem>
             ))}
           </SelectContent>
-        </Select>
-        <Select value={fStatus} onValueChange={setFStatus}>
+        </Select>}
+        <Select value={fStatus || 'todos'} onValueChange={(value) => setFStatus(value === 'todos' ? '' : value)}>
           <SelectTrigger className="sm:w-36">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="todos">Todos</SelectItem>
             <SelectItem value="ativo">Ativo</SelectItem>
             <SelectItem value="inativo">Inativo</SelectItem>
           </SelectContent>

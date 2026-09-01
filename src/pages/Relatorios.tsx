@@ -11,7 +11,7 @@ import { formatDataBR, isThisMonth, type Aniversariante } from '@/lib/aniversari
 import { exportCSV } from '@/lib/csv'
 
 export function Relatorios() {
-  const { lojas, contatos, campanhas, treinamentos, campanhaParticipantes, treinamentoParticipantes, brindes, profiles } = useData()
+  const { lojas, contatos, treinamentos, treinamentoParticipantes, brindes, profiles } = useData()
   const { isAdmin, user } = useAuth()
 
   const vendedores = profiles.filter((p) => p.perfil === 'vendedor')
@@ -113,36 +113,6 @@ export function Relatorios() {
           })),
         filename: 'brindes_enviados.csv',
         mostrar: true,
-      }),
-    },
-    {
-      key: 'campanhas-ativas',
-      label: 'Campanhas ativas',
-      data: () => ({
-        rows: campanhas
-          .filter((c) => c.status === 'ativa')
-          .map((c) => ({
-            Nome: c.nome,
-            Inicio: formatDataBR(c.data_inicio),
-            Fim: formatDataBR(c.data_fim),
-            Premio: c.premio ?? '-',
-          })),
-        filename: 'campanhas_ativas.csv',
-        mostrar: isAdmin,
-      }),
-    },
-    {
-      key: 'camp-participantes',
-      label: 'Participantes de campanhas',
-      data: () => ({
-        rows: campanhaParticipantes.map((p) => ({
-          Campanha: campanhas.find((c) => c.id === p.campanha_id)?.nome ?? '-',
-          Loja: p.loja?.nome_fantasia ?? '-',
-          Contato: p.contato?.nome ?? '-',
-          Status: p.status,
-        })),
-        filename: 'participantes_campanhas.csv',
-        mostrar: isAdmin,
       }),
     },
     {

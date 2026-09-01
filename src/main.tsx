@@ -11,7 +11,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AuthProvider>
       <DataProvider>
-        <RouterProvider router={router} />
+        <React.Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-brand-gray"><div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-black border-t-accent" /></div>}>
+          <RouterProvider router={router} />
+        </React.Suspense>
         <Toaster position="top-right" richColors closeButton />
       </DataProvider>
     </AuthProvider>

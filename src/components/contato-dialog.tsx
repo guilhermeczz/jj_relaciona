@@ -52,7 +52,6 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
     email: '',
     data_nascimento: '',
     recebe_mensagens: true,
-    recebe_campanhas: true,
     recebe_treinamentos: true,
     observacoes: '',
     ativo: true,
@@ -71,7 +70,6 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
           email: contato.email ?? '',
           data_nascimento: contato.data_nascimento ?? '',
           recebe_mensagens: contato.recebe_mensagens,
-          recebe_campanhas: contato.recebe_campanhas,
           recebe_treinamentos: contato.recebe_treinamentos,
           observacoes: contato.observacoes ?? '',
           ativo: contato.ativo,
@@ -86,7 +84,6 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
           email: '',
           data_nascimento: '',
           recebe_mensagens: true,
-          recebe_campanhas: true,
           recebe_treinamentos: true,
           observacoes: '',
           ativo: true,
@@ -114,7 +111,6 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
       email: form.email || null,
       data_nascimento: form.data_nascimento || null,
       recebe_mensagens: form.recebe_mensagens,
-      recebe_campanhas: form.recebe_campanhas,
       recebe_treinamentos: form.recebe_treinamentos,
       observacoes: form.observacoes || null,
       ativo: form.ativo,
@@ -161,12 +157,12 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
           </div>
           <div className="space-y-1.5">
             <Label>Cargo / Função</Label>
-            <Select value={form.cargo} onValueChange={(v) => set('cargo', v)}>
+            <Select value={form.cargo || 'none'} onValueChange={(v) => set('cargo', v === 'none' ? '' : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Nenhum</SelectItem>
+                <SelectItem value="none">Nenhum</SelectItem>
                 {CARGOS.map((c) => (
                   <SelectItem key={c} value={c}>
                     {c.charAt(0).toUpperCase() + c.slice(1)}
@@ -200,13 +196,6 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
                   onCheckedChange={(v) => set('recebe_mensagens', Boolean(v))}
                 />
                 Recebe mensagens
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <Checkbox
-                  checked={form.recebe_campanhas}
-                  onCheckedChange={(v) => set('recebe_campanhas', Boolean(v))}
-                />
-                Recebe campanhas
               </label>
               <label className="flex items-center gap-2 text-sm">
                 <Checkbox

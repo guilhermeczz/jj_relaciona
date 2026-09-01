@@ -128,7 +128,7 @@ export function LojaDialog({ open, onOpenChange, loja }: Props) {
     const payload = {
       ...form,
       nome_fantasia: form.nome_fantasia.trim(),
-      vendedor_responsavel_id: form.vendedor_responsavel_id || null,
+      vendedor_responsavel_id: form.vendedor_responsavel_id && form.vendedor_responsavel_id !== 'none' ? form.vendedor_responsavel_id : null,
       data_fundacao: form.data_fundacao || null,
       cnpj: form.cnpj || null,
       whatsapp: form.whatsapp || null,
@@ -138,9 +138,9 @@ export function LojaDialog({ open, onOpenChange, loja }: Props) {
       numero: form.numero || null,
       bairro: form.bairro || null,
       cidade: form.cidade || null,
-      estado: form.estado || null,
+      estado: form.estado && form.estado !== 'none' ? form.estado : null,
       cep: form.cep || null,
-      segmento: form.segmento || null,
+      segmento: form.segmento && form.segmento !== 'none' ? form.segmento : null,
       razao_social: form.razao_social || null,
       observacoes: form.observacoes || null,
     }
@@ -227,12 +227,12 @@ export function LojaDialog({ open, onOpenChange, loja }: Props) {
           </div>
           <div className="space-y-1.5">
             <Label>Estado</Label>
-            <Select value={form.estado} onValueChange={(v) => set('estado', v)}>
+            <Select value={form.estado || 'none'} onValueChange={(v) => set('estado', v === 'none' ? '' : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="UF" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Selecione</SelectItem>
+                <SelectItem value="none">Selecione</SelectItem>
                 {ESTADOS.map((e) => (
                   <SelectItem key={e} value={e}>
                     {e}
@@ -250,6 +250,7 @@ export function LojaDialog({ open, onOpenChange, loja }: Props) {
             <Select
               value={form.vendedor_responsavel_id}
               onValueChange={(v) => set('vendedor_responsavel_id', v)}
+              disabled={!isAdmin}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o vendedor" />

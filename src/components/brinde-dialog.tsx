@@ -21,9 +21,10 @@ import {
 } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
 import { useData } from '@/context/DataContext'
+import { useAuth } from '@/context/AuthContext'
 import type { Brinde, Loja } from '@/types'
 
-const MOTIVOS = ['aniversario_loja', 'aniversario_contato', 'campanha', 'relacionamento', 'outro']
+const MOTIVOS = ['aniversario_loja', 'aniversario_contato', 'relacionamento', 'outro']
 const STATUS = ['pendente', 'separado', 'enviado', 'cancelado']
 
 interface Props {
@@ -36,6 +37,7 @@ interface Props {
 
 export function BrindeDialog({ open, onOpenChange, lojaId, contatoId, brinde }: Props) {
   const { lojas, loadAll, getContatosDaLoja } = useData()
+  const { user } = useAuth()
   const [loja, setLoja] = useState(lojaId ?? '')
   const [contato, setContato] = useState(contatoId ?? '')
   const [motivo, setMotivo] = useState('relacionamento')
@@ -86,6 +88,7 @@ export function BrindeDialog({ open, onOpenChange, lojaId, contatoId, brinde }: 
       status,
       data_prevista: dataPrevista || null,
       data_envio: status === 'enviado' && dataEnvio ? dataEnvio : dataEnvio || null,
+      vendedor_responsavel_id: brinde?.vendedor_responsavel_id ?? lojas.find((item) => item.id === loja)?.vendedor_responsavel_id ?? user?.id ?? null,
       observacoes: observacoes || null,
     }
     const { error } = brinde
@@ -126,7 +129,7 @@ export function BrindeDialog({ open, onOpenChange, lojaId, contatoId, brinde }: 
           </div>
           <div className="space-y-1.5">
             <Label>Contato (opcional)</Label>
-            <Select value={contato} onValueChange={setContato}>
+            <Select value={contato || 'none'} onValueChange={(value) => setContato(value === 'none' ? '' : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um contato" />
               </SelectTrigger>

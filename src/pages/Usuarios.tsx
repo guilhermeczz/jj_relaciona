@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { UserCog, Pencil } from 'lucide-react'
+import { UserCog, Pencil, Plus } from 'lucide-react'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -19,7 +19,12 @@ export function Usuarios() {
     <div>
       <PageHeader
         title="Usuários"
-        description="Administradores e vendedores vinculados ao Supabase Auth."
+        description="Crie os acessos da equipe e gerencie vendedores."
+        actions={
+          <Button variant="accent" onClick={() => { setEditando(null); setDialogOpen(true) }}>
+            <Plus className="h-4 w-4" /> Novo usuário
+          </Button>
+        }
       />
 
       {profiles.length === 0 ? (
@@ -32,7 +37,7 @@ export function Usuarios() {
                 <thead className="border-b bg-brand-gray">
                   <tr>
                     <th className="px-4 py-2 text-left font-medium text-muted-foreground">Nome</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">E-mail</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Username</th>
                     <th className="px-4 py-2 text-left font-medium text-muted-foreground">Perfil</th>
                     <th className="px-4 py-2 text-left font-medium text-muted-foreground">Telefone</th>
                     <th className="px-4 py-2 text-left font-medium text-muted-foreground">Status</th>
@@ -44,7 +49,7 @@ export function Usuarios() {
                   {profiles.map((p) => (
                     <tr key={p.id} className="border-b last:border-0 hover:bg-muted/50">
                       <td className="px-4 py-2 font-medium text-brand-black">{p.nome}</td>
-                      <td className="px-4 py-2">{p.email}</td>
+                      <td className="px-4 py-2 font-mono text-xs">@{p.username}</td>
                       <td className="px-4 py-2">
                         <StatusBadge value={p.perfil} />
                       </td>

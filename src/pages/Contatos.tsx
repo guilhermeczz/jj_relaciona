@@ -81,12 +81,12 @@ export function Contatos() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Select value={fLoja} onValueChange={setFLoja}>
+        <Select value={fLoja || 'todas'} onValueChange={(value) => setFLoja(value === 'todas' ? '' : value)}>
           <SelectTrigger className="sm:w-56">
             <SelectValue placeholder="Loja" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas as lojas</SelectItem>
+            <SelectItem value="todas">Todas as lojas</SelectItem>
             {lojasVisiveis.map((l) => (
               <SelectItem key={l.id} value={l.id}>
                 {l.nome_fantasia}
@@ -158,7 +158,6 @@ export function Contatos() {
                 )}
                 <div className="mt-2 flex flex-wrap gap-1">
                   {c.recebe_mensagens && <span className="rounded bg-brand-gray px-1.5 py-0.5 text-[10px]">Mensagens</span>}
-                  {c.recebe_campanhas && <span className="rounded bg-brand-gray px-1.5 py-0.5 text-[10px]">Campanhas</span>}
                   {c.recebe_treinamentos && <span className="rounded bg-brand-gray px-1.5 py-0.5 text-[10px]">Treinamentos</span>}
                 </div>
                 {isAdmin && (

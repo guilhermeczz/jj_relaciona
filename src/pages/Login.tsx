@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Package, Eye, EyeOff } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, Package, ShieldCheck, Sparkles } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,7 +11,7 @@ import { isSupabaseConfigured } from '@/lib/supabase'
 export function Login() {
   const { signIn } = useAuth()
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -19,107 +19,135 @@ export function Login() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!isSupabaseConfigured()) {
-      toast.error('Supabase não está configurado. Defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.')
+      toast.error('Conecte o Supabase nas variáveis de ambiente para acessar.')
+      return
+    }
+    if (!/^[a-z0-9._-]{3,30}$/i.test(username.trim())) {
+      toast.error('Digite um username válido.')
+      return
+    }
+    if (!/^\d{6}$/.test(password)) {
+      toast.error('A senha deve ter exatamente 6 números.')
       return
     }
     setLoading(true)
-    const { error } = await signIn(email, password)
+    const { error } = await signIn(username, password)
     setLoading(false)
     if (error) {
-      toast.error(error)
+      toast.error('Username ou senha incorretos.')
       return
     }
-    toast.success('Bem-vindo!')
+    toast.success('Bem-vindo ao ConstruJota Relaciona!')
     navigate('/dashboard')
   }
 
   return (
-    <div className="flex min-h-screen bg-brand-black">
-      <div className="hidden w-1/2 flex-col justify-between bg-brand-black p-12 lg:flex">
-        <div className="flex items-center gap-2">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-brand-black">
-            <Package className="h-6 w-6" />
+    <main className="grid min-h-screen bg-[#121212] lg:grid-cols-[1.08fr_0.92fr]">
+      <section className="relative hidden min-h-screen overflow-hidden p-12 lg:flex lg:flex-col lg:justify-between xl:p-16">
+        <div className="absolute -left-32 bottom-[-22rem] h-[42rem] w-[42rem] rounded-full bg-accent/10 blur-3xl" />
+        <div className="absolute right-[-10rem] top-[-12rem] h-[34rem] w-[34rem] rounded-full border-[90px] border-white/[0.025]" />
+
+        <div className="relative flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-brand-black">
+            <Package className="h-7 w-7" strokeWidth={2.5} />
           </div>
-          <div className="leading-tight text-white">
-            <p className="text-xl font-bold">JJ Relaciona</p>
-            <p className="text-sm text-white/50">ConstruJota · Distribuidora</p>
+          <div className="leading-[1.05]">
+            <p className="text-lg font-extrabold text-white">ConstruJota</p>
+            <p className="text-lg font-extrabold text-accent">Relaciona</p>
           </div>
         </div>
-        <div className="text-white">
-          <h2 className="max-w-md text-3xl font-bold leading-tight">
-            Centralize o relacionamento com suas lojas e vendedores parceiros.
-          </h2>
-          <p className="mt-3 max-w-md text-white/60">
-            CRM comercial para fortalecer parcerias, acompanhar campanhas, treinamentos, brindes e aniversários.
+
+        <div className="relative max-w-xl pb-10">
+          <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-xl border border-accent/20 bg-accent/10 text-accent">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-white xl:text-5xl">
+            Relacionamentos que constroem resultados.
+          </h1>
+          <p className="mt-5 max-w-lg text-base leading-relaxed text-white/55">
+            Lojas, contatos, aniversários e ações de relacionamento em um só lugar para o time comercial da ConstruJota.
           </p>
+          <div className="mt-10 flex gap-8 border-t border-white/10 pt-7 text-sm text-white/55">
+            <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-accent" /> Acesso protegido</span>
+            <span className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-accent" /> Feito para vendedores</span>
+          </div>
         </div>
-        <p className="text-sm text-white/40">© {new Date().getFullYear()} JJ Relaciona · ConstruJota</p>
-      </div>
 
-      <div className="flex flex-1 items-center justify-center bg-brand-gray p-6">
-        <div className="w-full max-w-sm">
-          <div className="mb-8 flex items-center gap-2 lg:hidden">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-brand-black">
-              <Package className="h-5 w-5" />
+        <p className="relative text-xs text-white/30">© {new Date().getFullYear()} ConstruJota · Uso interno</p>
+      </section>
+
+      <section className="flex min-h-screen items-center justify-center bg-brand-gray px-5 py-10 sm:px-8">
+        <div className="w-full max-w-[420px]">
+          <div className="mb-9 flex items-center justify-center gap-3 lg:hidden">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-brand-black">
+              <Package className="h-6 w-6" />
             </div>
-            <div className="leading-tight">
-              <p className="text-lg font-bold text-brand-black">JJ Relaciona</p>
-              <p className="text-xs text-muted-foreground">ConstruJota</p>
+            <div className="leading-none">
+              <p className="font-extrabold">ConstruJota</p>
+              <p className="mt-1 font-extrabold text-[#b98e00]">Relaciona</p>
             </div>
           </div>
 
-          <div className="rounded-2xl border bg-white p-8 shadow-sm">
-            <h1 className="text-xl font-bold text-brand-black">Acessar sistema</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Entre com seu e-mail e senha.</p>
+          <div className="surface-shadow rounded-[24px] border bg-white p-6 sm:p-9">
+            <div className="mb-7">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9a7800]">Área exclusiva</p>
+              <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-brand-black">Acesse sua conta</h2>
+              <p className="mt-2 text-sm text-muted-foreground">Use o username e a senha recebidos do administrador.</p>
+            </div>
 
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="email">E-mail</Label>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="voce@empresa.com.br"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  autoComplete="username"
+                  inputMode="text"
+                  placeholder="ex.: joao.silva"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))}
                   required
+                  className="h-12 rounded-xl bg-[#fbfbfa] px-4"
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="password">Senha</Label>
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha de 6 dígitos</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={show ? 'text' : 'password'}
+                    inputMode="numeric"
                     autoComplete="current-password"
-                    placeholder="••••••••"
+                    placeholder="••••••"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => setPassword(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    minLength={6}
+                    maxLength={6}
                     required
-                    className="pr-10"
+                    className="h-12 rounded-xl bg-[#fbfbfa] px-4 pr-12 tracking-[0.35em]"
                   />
                   <button
                     type="button"
+                    aria-label={show ? 'Ocultar senha' : 'Mostrar senha'}
                     onClick={() => setShow((s) => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
                   >
                     {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Entrando...' : 'Entrar'}
+              <Button type="submit" variant="accent" size="lg" className="w-full" disabled={loading}>
+                {loading ? 'Entrando...' : 'Entrar'} {!loading && <ArrowRight className="h-4 w-4" />}
               </Button>
             </form>
           </div>
+
           {!isSupabaseConfigured() && (
-            <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-              Modo de desenvolvimento: configure <code>VITE_SUPABASE_URL</code> e{' '}
-              <code>VITE_SUPABASE_ANON_KEY</code> no arquivo <code>.env</code> para autenticar.
+            <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-center text-xs text-amber-800">
+              Ambiente local ainda não conectado ao Supabase.
             </p>
           )}
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   )
 }

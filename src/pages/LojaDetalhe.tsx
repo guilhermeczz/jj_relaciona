@@ -20,7 +20,7 @@ import { toast } from 'sonner'
 export function LojaDetalhe() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { getLoja, getContatosDaLoja, interacoes, brindes, campanhaParticipantes, treinamentoParticipantes, campanhas, treinamentos, loadAll } = useData()
+  const { getLoja, getContatosDaLoja, interacoes, brindes, treinamentoParticipantes, treinamentos, loadAll } = useData()
   const { user, isAdmin } = useAuth()
   const [tab, setTab] = useState('dados')
   const [editOpen, setEditOpen] = useState(false)
@@ -32,7 +32,6 @@ export function LojaDetalhe() {
   const lojaContatos = loja ? getContatosDaLoja(loja.id) : []
   const lojaInteracoes = interacoes.filter((i) => i.loja_id === id)
   const lojaBrindes = brindes.filter((b) => b.loja_id === id)
-  const lojaCampanhas = campanhaParticipantes.filter((c) => c.loja_id === id)
   const lojaTreinamentos = treinamentoParticipantes.filter((t) => t.loja_id === id)
 
   const data = useMemo(() => {
@@ -74,8 +73,6 @@ export function LojaDetalhe() {
       loadAll()
     }
   }
-
-  const campanhaNome = (id: string) => campanhas.find((c) => c.id === id)?.nome ?? '-'
 
   return (
     <div>
@@ -124,7 +121,6 @@ export function LojaDetalhe() {
           <TabsTrigger value="contatos">Contatos ({lojaContatos.length})</TabsTrigger>
           <TabsTrigger value="interacoes">Interações</TabsTrigger>
           <TabsTrigger value="brindes">Brindes</TabsTrigger>
-          <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
           <TabsTrigger value="treinamentos">Treinamentos</TabsTrigger>
         </TabsList>
 
@@ -236,28 +232,6 @@ export function LojaDetalhe() {
                       </p>
                     </div>
                     <StatusBadge value={b.status} />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="campanhas" className="mt-4">
-          {lojaCampanhas.length === 0 ? (
-            <EmptyState icon={<Cake className="h-8 w-8" />} title="Loja não participa de campanhas" />
-          ) : (
-            <div className="space-y-3">
-              {lojaCampanhas.map((c) => (
-                <Card key={c.id} className="bg-white">
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div>
-                      <p className="font-medium text-brand-black">{campanhaNome(c.campanha_id)}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {c.contato ? `Contato: ${c.contato.nome}` : 'Sem contato específico'}
-                      </p>
-                    </div>
-                    <StatusBadge value={c.status} />
                   </CardContent>
                 </Card>
               ))}

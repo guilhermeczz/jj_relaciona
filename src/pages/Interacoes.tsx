@@ -80,12 +80,12 @@ export function Interacoes() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Select value={fTipo} onValueChange={setFTipo}>
+        <Select value={fTipo || 'todos'} onValueChange={(value) => setFTipo(value === 'todos' ? '' : value)}>
           <SelectTrigger className="sm:w-44">
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="todos">Todos</SelectItem>
             {tipos.map((t) => (
               <SelectItem key={t} value={t}>
                 {t}

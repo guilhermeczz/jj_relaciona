@@ -82,31 +82,31 @@ export function Brindes() {
       />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
-        <Select value={fStatus} onValueChange={setFStatus}>
+        <Select value={fStatus || 'todos'} onValueChange={(value) => setFStatus(value === 'todos' ? '' : value)}>
           <SelectTrigger className="sm:w-44">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="todos">Todos</SelectItem>
             <SelectItem value="pendente">Pendente</SelectItem>
             <SelectItem value="separado">Separado</SelectItem>
             <SelectItem value="enviado">Enviado</SelectItem>
             <SelectItem value="cancelado">Cancelado</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={fVendedor} onValueChange={setFVendedor}>
+        {isAdmin && <Select value={fVendedor || 'todos'} onValueChange={(value) => setFVendedor(value === 'todos' ? '' : value)}>
           <SelectTrigger className="sm:w-48">
             <SelectValue placeholder="Vendedor" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="todos">Todos</SelectItem>
             {vendedores.map((v) => (
               <SelectItem key={v} value={v}>
                 {v}
               </SelectItem>
             ))}
           </SelectContent>
-        </Select>
+        </Select>}
       </div>
 
       {filtered.length === 0 ? (

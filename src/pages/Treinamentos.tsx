@@ -8,11 +8,13 @@ import { EmptyState } from '@/components/empty-state'
 import { TreinamentoDialog } from '@/components/treinamento-dialog'
 import { ParParticipantesDialog } from '@/components/par-participantes-dialog'
 import { useData } from '@/context/DataContext'
+import { useAuth } from '@/context/AuthContext'
 import { formatDataBR } from '@/lib/aniversario'
 import type { Treinamento } from '@/types'
 
 export function Treinamentos() {
   const { treinamentos, treinamentoParticipantes } = useData()
+  const { isAdmin } = useAuth()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editando, setEditando] = useState<Treinamento | null>(null)
   const [participantesDa, setParticipantesDa] = useState<Treinamento | null>(null)
@@ -25,11 +27,11 @@ export function Treinamentos() {
       <PageHeader
         title="Treinamentos"
         description="Treinamentos externos para lojas e contatos."
-        actions={
+        actions={isAdmin ? (
           <Button variant="accent" onClick={() => { setEditando(null); setDialogOpen(true) }}>
             <Plus className="h-4 w-4" /> Novo treinamento
           </Button>
-        }
+        ) : undefined}
       />
 
       {treinamentos.length === 0 ? (
@@ -55,14 +57,14 @@ export function Treinamentos() {
                   <Users2 className="h-4 w-4" /> {confirmados(t.id)}/{inscritos(t.id)} confirmados
                   {t.vagas ? ` · ${t.vagas} vagas` : ''}
                 </p>
-                <div className="mt-3 flex gap-2">
+                {isAdmin && <div className="mt-3 flex gap-2">
                   <Button size="sm" variant="outline" className="flex-1" onClick={() => setParticipantesDa(t)}>
                     Participantes
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => { setEditando(t); setDialogOpen(true) }}>
                     <Pencil className="h-4 w-4" />
                   </Button>
-                </div>
+                </div>}
               </CardContent>
             </Card>
           ))}
@@ -71,7 +73,6 @@ export function Treinamentos() {
 
       <TreinamentoDialog open={dialogOpen} onOpenChange={setDialogOpen} treinamento={editando} />
       <ParParticipantesDialog
-        tipo="treinamento"
         open={!!participantesDa}
         onOpenChange={(o) => !o && setParticipantesDa(null)}
         treinamento={participantesDa}

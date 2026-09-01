@@ -1,6 +1,7 @@
 export interface Profile {
   id: string
   nome: string
+  username: string
   email: string
   perfil: 'admin' | 'vendedor'
   telefone?: string | null
@@ -45,7 +46,6 @@ export interface Contato {
   email?: string | null
   data_nascimento?: string | null
   recebe_mensagens: boolean
-  recebe_campanhas: boolean
   recebe_treinamentos: boolean
   observacoes?: string | null
   ativo: boolean
@@ -84,34 +84,6 @@ export interface Brinde {
   loja?: Loja | null
   contato?: Contato | null
   vendedor?: Profile | null
-}
-
-export interface Campanha {
-  id: string
-  nome: string
-  descricao?: string | null
-  produto_marca?: string | null
-  regra?: string | null
-  premio?: string | null
-  data_inicio?: string | null
-  data_fim?: string | null
-  status: 'rascunho' | 'ativa' | 'encerrada' | 'cancelada'
-  observacoes?: string | null
-  created_at: string
-  updated_at?: string
-}
-
-export interface CampanhaParticipante {
-  id: string
-  campanha_id: string
-  loja_id: string
-  contato_id?: string | null
-  status: 'convidado' | 'participando' | 'concluido' | 'cancelado'
-  observacoes?: string | null
-  created_at: string
-  updated_at?: string
-  loja?: Loja | null
-  contato?: Contato | null
 }
 
 export interface Treinamento {

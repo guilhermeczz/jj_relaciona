@@ -32,7 +32,8 @@ export function PerfilDialog({ open, onOpenChange, perfil }: Props) {
   const { loadAll } = useData()
   const [form, setForm] = useState({
     nome: '',
-    email: '',
+    username: '',
+    senha: '',
     perfil: 'vendedor',
     telefone: '',
     ativo: true,
@@ -43,11 +44,14 @@ export function PerfilDialog({ open, onOpenChange, perfil }: Props) {
     if (open && perfil) {
       setForm({
         nome: perfil.nome,
-        email: perfil.email,
+        username: perfil.username,
+        senha: '',
         perfil: perfil.perfil,
         telefone: perfil.telefone ?? '',
         ativo: perfil.ativo,
       })
+    } else if (open) {
+      setForm({ nome: '', username: '', senha: '', perfil: 'vendedor', telefone: '', ativo: true })
     }
   }, [open, perfil])
 
@@ -59,9 +63,21 @@ export function PerfilDialog({ open, onOpenChange, perfil }: Props) {
       telefone: form.telefone || null,
       ativo: form.ativo,
     }
+    if (!perfil && !/^[a-z0-9._-]{3,30}$/.test(form.username)) {
+      setSaving(false)
+      toast.error('O username deve ter de 3 a 30 caracteres e usar apenas letras, números, ponto, hífen ou underline.')
+      return
+    }
+    if (!perfil && !/^\d{6}$/.test(form.senha)) {
+      setSaving(false)
+      toast.error('A senha precisa ter exatamente 6 números.')
+      return
+    }
     const { error } = perfil
       ? await supabase.from('profiles').update(payload).eq('id', perfil.id)
-      : await supabase.from('profiles').insert({ ...payload, email: form.email })
+      : await supabase.functions.invoke('criar-usuario', {
+          body: { ...payload, username: form.username, senha: form.senha },
+        })
     setSaving(false)
     if (error) {
       toast.error(error.message)
@@ -79,8 +95,8 @@ export function PerfilDialog({ open, onOpenChange, perfil }: Props) {
           <DialogTitle>{perfil ? 'Editar usuário' : 'Novo usuário'}</DialogTitle>
           <DialogDescription>
             {perfil
-              ? 'Edite os dados do usuário cadastrado no Supabase Auth.'
-              : 'Crie um perfil vinculado a um usuário existente do Supabase Auth.'}
+              ? 'Edite os dados e o status deste acesso.'
+              : 'Defina o username e uma senha numérica de 6 dígitos.'}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -89,14 +105,28 @@ export function PerfilDialog({ open, onOpenChange, perfil }: Props) {
             <Input value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} />
           </div>
           <div className="space-y-1.5">
-            <Label>E-mail (ID do Auth)</Label>
+            <Label>Username</Label>
             <Input
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              value={form.username}
+              onChange={(e) => setForm((f) => ({ ...f, username: e.target.value.toLowerCase().replace(/\s/g, '') }))}
               disabled={!!perfil}
+              placeholder="ex.: joao.silva"
             />
           </div>
+          {!perfil && (
+            <div className="space-y-1.5">
+              <Label>Senha inicial (6 números)</Label>
+              <Input
+                type="password"
+                inputMode="numeric"
+                minLength={6}
+                maxLength={6}
+                value={form.senha}
+                onChange={(e) => setForm((f) => ({ ...f, senha: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                placeholder="••••••"
+              />
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label>Perfil</Label>
             <Select value={form.perfil} onValueChange={(v) => setForm((f) => ({ ...f, perfil: v }))}>
@@ -127,12 +157,7 @@ export function PerfilDialog({ open, onOpenChange, perfil }: Props) {
               </Select>
             </div>
           )}
-          {!perfil && (
-            <p className="text-xs text-muted-foreground">
-              O usuário precisa existir no Supabase Auth. Crie o usuário no painel do Supabase e informe o
-              e-mail acima para vincular o perfil.
-            </p>
-          )}
+          {!perfil && <p className="text-xs text-muted-foreground">A conta será criada já confirmada, sem envio de e-mail.</p>}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

@@ -42,7 +42,7 @@ export function Aniversariantes() {
     const out: Aniversariante[] = []
     for (const l of minhasLojas) {
       if (l.data_fundacao) {
-        const d = new Date(l.data_fundacao)
+        const d = new Date(`${l.data_fundacao}T12:00:00`)
         out.push({
           tipo: 'loja',
           nome: l.nome_fantasia,
@@ -59,7 +59,7 @@ export function Aniversariantes() {
       }
       for (const c of contatos.filter((c) => c.loja_id === l.id && c.ativo)) {
         if (c.data_nascimento) {
-          const d = new Date(c.data_nascimento)
+          const d = new Date(`${c.data_nascimento}T12:00:00`)
           out.push({
             tipo: 'contato',
             nome: c.nome,
@@ -86,7 +86,7 @@ export function Aniversariantes() {
 
   const filtrados = filterAniversariantes(lista, filtro).filter((a) => {
     const matchV = !fVendedor || a.vendedorId === fVendedor
-    const matchC = !fCidade || a.lojaNome === minhasLojas.find((l) => l.id === a.lojaId)?.cidade
+    const matchC = !fCidade || minhasLojas.find((l) => l.id === a.lojaId)?.cidade === fCidade
     const matchT = !fTipo || a.tipo === fTipo
     return matchV && matchC && matchT
   })
@@ -111,12 +111,12 @@ export function Aniversariantes() {
           </SelectContent>
         </Select>
         {isAdmin && (
-          <Select value={fVendedor} onValueChange={setFVendedor}>
+          <Select value={fVendedor || 'todos'} onValueChange={(value) => setFVendedor(value === 'todos' ? '' : value)}>
             <SelectTrigger className="sm:w-48">
               <SelectValue placeholder="Vendedor" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="todos">Todos</SelectItem>
               {vendedores.map((v) => (
                 <SelectItem key={v.id} value={v.id}>
                   {v.nome}
@@ -125,12 +125,12 @@ export function Aniversariantes() {
             </SelectContent>
           </Select>
         )}
-        <Select value={fCidade} onValueChange={setFCidade}>
+        <Select value={fCidade || 'todas'} onValueChange={(value) => setFCidade(value === 'todas' ? '' : value)}>
           <SelectTrigger className="sm:w-44">
             <SelectValue placeholder="Cidade" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas</SelectItem>
+            <SelectItem value="todas">Todas</SelectItem>
             {cidades.map((c) => (
               <SelectItem key={c} value={c}>
                 {c}
@@ -138,12 +138,12 @@ export function Aniversariantes() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={fTipo} onValueChange={setFTipo}>
+        <Select value={fTipo || 'todos'} onValueChange={(value) => setFTipo(value === 'todos' ? '' : value)}>
           <SelectTrigger className="sm:w-40">
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="todos">Todos</SelectItem>
             <SelectItem value="loja">Loja</SelectItem>
             <SelectItem value="contato">Contato</SelectItem>
           </SelectContent>
