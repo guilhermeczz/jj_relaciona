@@ -41,14 +41,22 @@ Nunca coloque a chave `service_role` no frontend. Ela é disponibilizada automat
 
 No painel do Supabase, abra **Authentication > Users > Add user** e crie:
 
-- e-mail interno: `admin@usuarios.construjota.com.br`;
+- e-mail interno: `admin@jj.com`;
 - senha: exatamente 6 números;
 - conta confirmada.
 
-Depois execute uma única vez no SQL Editor:
+Depois execute uma única vez no SQL Editor. Este comando também funciona caso o usuário tenha sido criado antes do banco:
 
 ```sql
-update public.profiles set perfil = 'admin' where username = 'admin';
+insert into public.profiles (id, nome, username, email, perfil, ativo)
+select id, 'Administrador', 'admin', email, 'admin', true
+from auth.users
+where email = 'admin@jj.com'
+on conflict (id) do update set
+  nome = excluded.nome,
+  username = excluded.username,
+  perfil = 'admin',
+  ativo = true;
 ```
 
 A partir daí, entre no sistema com o username `admin` e crie todos os demais vendedores na página **Usuários**. As novas contas já são criadas confirmadas e não recebem e-mail.

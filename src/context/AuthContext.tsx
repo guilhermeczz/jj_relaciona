@@ -11,7 +11,7 @@ interface AuthContextValue {
   isAdmin: boolean
 }
 
-const USERNAME_DOMAIN = 'usuarios.construjota.com.br'
+const USERNAME_DOMAIN = 'jj.com'
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 

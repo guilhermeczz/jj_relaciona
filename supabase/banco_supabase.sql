@@ -344,10 +344,9 @@ grant execute on function public.is_active_user() to authenticated;
 -- ============================================================
 -- PRIMEIRO ADMINISTRADOR
 -- 1. Em Authentication > Users, crie o e-mail:
---      admin@usuarios.construjota.com.br
+--      admin@jj.com
 --    com uma senha numérica de 6 dígitos e marque como confirmado.
 -- 2. O trigger acima criará o profile automaticamente como vendedor.
--- 3. Promova a conta uma única vez com:
---      update public.profiles set perfil = 'admin' where username = 'admin';
+-- 3. Promova a conta conforme o comando de bootstrap documentado no README.
 -- 4. Os demais acessos passam a ser criados na tela Usuários do sistema.
 -- ============================================================
