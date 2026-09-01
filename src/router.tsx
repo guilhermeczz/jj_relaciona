@@ -1,7 +1,10 @@
 import { lazy } from 'react'
-import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
-import { useAuth } from '@/context/AuthContext'
+import { createBrowserRouter, Navigate, Outlet, useRouteError } from 'react-router-dom'
+import { AuthProvider, useAuth } from '@/context/AuthContext'
+import { DataProvider } from '@/context/DataContext'
 import { AppLayout } from '@/layouts/AppLayout'
+import { Button } from '@/components/ui/button'
+import { AlertTriangle, RefreshCw } from 'lucide-react'
 
 const Login = lazy(() => import('@/pages/Login').then((module) => ({ default: module.Login })))
 const Dashboard = lazy(() => import('@/pages/Dashboard').then((module) => ({ default: module.Dashboard })))
@@ -17,6 +20,37 @@ const Usuarios = lazy(() => import('@/pages/Usuarios').then((module) => ({ defau
 const Configuracoes = lazy(() => import('@/pages/Configuracoes').then((module) => ({ default: module.Configuracoes })))
 const NotFound = lazy(() => import('@/pages/NotFound').then((module) => ({ default: module.NotFound })))
 
+function Providers() {
+  return (
+    <AuthProvider>
+      <DataProvider>
+        <Outlet />
+      </DataProvider>
+    </AuthProvider>
+  )
+}
+
+function RouteError() {
+  const error = useRouteError()
+  const message = error instanceof Error ? error.message : 'Não foi possível carregar esta página.'
+
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-brand-gray p-5">
+      <div className="surface-shadow w-full max-w-md rounded-2xl border bg-white p-8 text-center">
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+          <AlertTriangle className="h-6 w-6" />
+        </span>
+        <h1 className="mt-5 text-xl font-extrabold text-brand-black">Algo não carregou corretamente</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Atualize a página para restabelecer sua sessão.</p>
+        {import.meta.env.DEV && <p className="mt-3 rounded-lg bg-muted p-2 text-xs text-muted-foreground">{message}</p>}
+        <Button variant="accent" className="mt-6 w-full" onClick={() => window.location.reload()}>
+          <RefreshCw className="h-4 w-4" /> Recarregar sistema
+        </Button>
+      </div>
+    </main>
+  )
+}
+
 function Protected() {
   const { user, loading } = useAuth()
   if (loading) return null
@@ -31,26 +65,34 @@ function AdminOnly() {
 }
 
 export const router = createBrowserRouter([
-  { path: '/login', element: <Login /> },
   {
-    element: <Protected />,
+    element: <Providers />,
+    errorElement: <RouteError />,
     children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
-      { path: '/dashboard', element: <Dashboard /> },
-      { path: '/lojas', element: <Lojas /> },
-      { path: '/lojas/:id', element: <LojaDetalhe /> },
-      { path: '/contatos', element: <Contatos /> },
-      { path: '/aniversariantes', element: <Aniversariantes /> },
-      { path: '/treinamentos', element: <Treinamentos /> },
-      { path: '/brindes', element: <Brindes /> },
-      { path: '/interacoes', element: <Interacoes /> },
-      { path: '/relatorios', element: <Relatorios /> },
+      { path: '/login', element: <Login /> },
       {
-        element: <AdminOnly />,
-        children: [{ path: '/usuarios', element: <Usuarios /> }],
+        element: <Protected />,
+        children: [
+          { index: true, element: <Navigate to="/dashboard" replace /> },
+          { path: '/dashboard', element: <Dashboard /> },
+          { path: '/lojas', element: <Lojas /> },
+          { path: '/lojas/:id', element: <LojaDetalhe /> },
+          { path: '/contatos', element: <Contatos /> },
+          { path: '/aniversariantes', element: <Aniversariantes /> },
+          { path: '/brindes', element: <Brindes /> },
+          { path: '/interacoes', element: <Interacoes /> },
+          {
+            element: <AdminOnly />,
+            children: [
+              { path: '/treinamentos', element: <Treinamentos /> },
+              { path: '/relatorios', element: <Relatorios /> },
+              { path: '/usuarios', element: <Usuarios /> },
+              { path: '/configuracoes', element: <Configuracoes /> },
+            ],
+          },
+          { path: '*', element: <NotFound /> },
+        ],
       },
-      { path: '/configuracoes', element: <Configuracoes /> },
-      { path: '*', element: <NotFound /> },
     ],
   },
 ])

@@ -42,7 +42,7 @@ export function Login() {
   }
 
   return (
-    <main className="grid min-h-screen bg-[#121212] lg:grid-cols-[1.08fr_0.92fr]">
+    <main className="login-light grid min-h-screen bg-[#121212] lg:grid-cols-[1.08fr_0.92fr]">
       <section className="relative hidden min-h-screen overflow-hidden p-12 lg:flex lg:flex-col lg:justify-between xl:p-16">
         <div className="absolute -left-32 bottom-[-22rem] h-[42rem] w-[42rem] rounded-full bg-accent/10 blur-3xl" />
         <div className="absolute right-[-10rem] top-[-12rem] h-[34rem] w-[34rem] rounded-full border-[90px] border-white/[0.025]" />
@@ -141,11 +141,6 @@ export function Login() {
             </form>
           </div>
 
-          {!isSupabaseConfigured() && (
-            <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-center text-xs text-amber-800">
-              Ambiente local ainda não conectado ao Supabase.
-            </p>
-          )}
         </div>
       </section>
     </main>

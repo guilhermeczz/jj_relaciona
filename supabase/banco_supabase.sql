@@ -323,15 +323,9 @@ create policy brindes_update on public.brindes for update to authenticated
   with check (public.is_admin() or (public.is_active_user() and vendedor_responsavel_id = auth.uid()));
 create policy brindes_delete on public.brindes for delete to authenticated using (public.is_admin());
 
-create policy treinamentos_select on public.treinamentos for select to authenticated
-  using (public.is_admin() or (public.is_active_user() and status = 'programado'));
 create policy treinamentos_admin_all on public.treinamentos for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
-create policy trein_part_select on public.treinamento_participantes for select to authenticated
-  using (public.is_admin() or (public.is_active_user() and exists (
-    select 1 from public.lojas where lojas.id = treinamento_participantes.loja_id and lojas.vendedor_responsavel_id = auth.uid()
-  )));
 create policy trein_part_admin_write on public.treinamento_participantes for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 

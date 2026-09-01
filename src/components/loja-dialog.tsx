@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { CheckCircle2, Loader2, MapPin } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ import { supabase } from '@/lib/supabase'
 import { useData } from '@/context/DataContext'
 import { useAuth } from '@/context/AuthContext'
 import type { Loja } from '@/types'
+import { fetchAddressByCep, formatCep, onlyCepDigits } from '@/lib/cep'
 
 const ESTADOS = [
   'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO',
@@ -68,6 +70,8 @@ export function LojaDialog({ open, onOpenChange, loja }: Props) {
     observacoes: '',
   })
   const [saving, setSaving] = useState(false)
+  const [cepStatus, setCepStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [cepMessage, setCepMessage] = useState('')
 
   useEffect(() => {
     if (open) {
@@ -114,6 +118,47 @@ export function LojaDialog({ open, onOpenChange, loja }: Props) {
       }
     }
   }, [open, loja, isAdmin, user])
+
+  useEffect(() => {
+    if (!open) return
+    const digits = onlyCepDigits(form.cep)
+    if (digits.length !== 8) {
+      setCepStatus('idle')
+      setCepMessage('')
+      return
+    }
+
+    const controller = new AbortController()
+    const timer = window.setTimeout(async () => {
+      setCepStatus('loading')
+      setCepMessage('Buscando endereço...')
+      try {
+        const address = await fetchAddressByCep(digits, controller.signal)
+        setForm((current) => ({
+          ...current,
+          endereco: address.logradouro || current.endereco,
+          bairro: address.bairro || current.bairro,
+          cidade: address.localidade || current.cidade,
+          estado: address.uf || current.estado,
+        }))
+        setCepStatus('success')
+        setCepMessage('Endereço preenchido automaticamente. Confira o número.')
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        setCepStatus('error')
+        setCepMessage(
+          error instanceof Error && error.message === 'CEP_NAO_ENCONTRADO'
+            ? 'CEP não encontrado. Confira os números.'
+            : 'Não foi possível consultar agora. Preencha o endereço manualmente.',
+        )
+      }
+    }, 450)
+
+    return () => {
+      window.clearTimeout(timer)
+      controller.abort()
+    }
+  }, [form.cep, open])
 
   function set(key: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [key]: value }))
@@ -210,6 +255,29 @@ export function LojaDialog({ open, onOpenChange, loja }: Props) {
             <Input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="loja-cep">CEP</Label>
+            <div className="relative max-w-xs">
+              <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="loja-cep"
+                value={form.cep}
+                onChange={(e) => set('cep', formatCep(e.target.value))}
+                inputMode="numeric"
+                autoComplete="postal-code"
+                maxLength={9}
+                placeholder="00000-000"
+                className="pl-9 pr-10"
+              />
+              {cepStatus === 'loading' && <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[#9a7800] dark:text-accent" />}
+              {cepStatus === 'success' && <CheckCircle2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-600" />}
+            </div>
+            {cepMessage && (
+              <p role="status" className={cepStatus === 'error' ? 'text-xs text-destructive' : 'text-xs text-muted-foreground'}>
+                {cepMessage}
+              </p>
+            )}
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
             <Label>Endereço</Label>
             <Input value={form.endereco} onChange={(e) => set('endereco', e.target.value)} placeholder="Rua, avenida..." />
           </div>
@@ -240,10 +308,6 @@ export function LojaDialog({ open, onOpenChange, loja }: Props) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>CEP</Label>
-            <Input value={form.cep} onChange={(e) => set('cep', e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <Label>Vendedor responsável</Label>

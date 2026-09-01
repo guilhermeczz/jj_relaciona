@@ -11,20 +11,20 @@ export default {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: '#111111',
-          foreground: '#FFFFFF',
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
         },
         accent: {
-          DEFAULT: '#FDBA12',
-          foreground: '#111111',
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
         },
         brand: {
           black: '#111111',
           dark: '#1E1E1E',
           yellow: '#FFCA05',
-          white: '#FFFFFF',
-          gray: '#F7F6F3',
-          muted: '#666666',
+          white: 'hsl(var(--card))',
+          gray: 'hsl(var(--background))',
+          muted: 'hsl(var(--muted-foreground))',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',

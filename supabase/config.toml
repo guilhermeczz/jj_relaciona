@@ -1,0 +1,7 @@
+project_id = "pipilvzgnnqqrrzzwsnj"
+
+[functions.criar-usuario]
+# O gateway precisa deixar o preflight OPTIONS chegar à função.
+# A requisição POST continua protegida por withSupabase({ auth: "user" })
+# e pela verificação do perfil administrador dentro do handler.
+verify_jwt = false

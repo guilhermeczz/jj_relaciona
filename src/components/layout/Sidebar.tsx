@@ -19,25 +19,34 @@ import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 const nav = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/lojas', label: 'Lojas', icon: Store },
   { to: '/contatos', label: 'Contatos', icon: Users },
   { to: '/aniversariantes', label: 'Aniversariantes', icon: Cake },
-  { to: '/treinamentos', label: 'Treinamentos', icon: GraduationCap },
+  { to: '/treinamentos', label: 'Treinamentos', icon: GraduationCap, adminOnly: true },
   { to: '/brindes', label: 'Brindes', icon: Gift },
   { to: '/interacoes', label: 'Interações', icon: MessageSquare },
-  { to: '/relatorios', label: 'Relatórios', icon: BarChart3 },
+  { to: '/relatorios', label: 'Relatórios', icon: BarChart3, adminOnly: true },
   { to: '/usuarios', label: 'Usuários', icon: UserCog, adminOnly: true },
-  { to: '/configuracoes', label: 'Configurações', icon: Settings },
+  { to: '/configuracoes', label: 'Configurações', icon: Settings, adminOnly: true },
 ]
 
-const mobile = [
+const sellerMobile = [
   { to: '/dashboard', label: 'Início', icon: LayoutDashboard },
   { to: '/lojas', label: 'Lojas', icon: Store },
   { to: '/aniversariantes', label: 'Agenda', icon: CalendarDays },
-  { to: '/interacoes', label: 'Contatos', icon: MessageSquare },
+  { to: '/contatos', label: 'Contatos', icon: Users },
+  { to: '/brindes', label: 'Brindes', icon: Gift },
+]
+
+const adminMobile = [
+  { to: '/dashboard', label: 'Início', icon: LayoutDashboard },
+  { to: '/lojas', label: 'Lojas', icon: Store },
+  { to: '/aniversariantes', label: 'Agenda', icon: CalendarDays },
+  { to: '/relatorios', label: 'Relatórios', icon: BarChart3 },
   { to: '/configuracoes', label: 'Mais', icon: MoreHorizontal },
 ]
 
@@ -96,6 +105,7 @@ export function Sidebar() {
             <p className="truncate text-sm font-semibold">{profile?.nome ?? 'Usuário'}</p>
             <p className="mt-1 text-[11px] capitalize text-white/45">{profile?.perfil ?? ''}</p>
           </div>
+          <ThemeToggle className="h-9 w-9 text-white/55 hover:bg-white/10 hover:text-white" />
           <Button
             aria-label="Sair do sistema"
             variant="ghost"
@@ -112,16 +122,19 @@ export function Sidebar() {
 }
 
 export function MobileNav() {
+  const { isAdmin } = useAuth()
+  const links = isAdmin ? adminMobile : sellerMobile
+
   return (
-    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-black/10 bg-white/95 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl md:hidden">
-      {mobile.map(({ to, label, icon: Icon }) => (
+    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-black/10 bg-white/95 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#151619]/95 md:hidden">
+      {links.map(({ to, label, icon: Icon }) => (
         <NavLink
           key={to}
           to={to}
           className={({ isActive }) =>
             cn(
               'relative flex min-h-[62px] flex-col items-center justify-center gap-1 text-[10px] font-semibold transition-colors',
-              isActive ? 'text-brand-black' : 'text-muted-foreground',
+              isActive ? 'text-foreground' : 'text-muted-foreground',
             )
           }
         >

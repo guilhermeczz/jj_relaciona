@@ -6,6 +6,14 @@
     <meta name="theme-color" content="#121212" />
     <meta name="description" content="CRM de relacionamento comercial da ConstruJota" />
     <title>ConstruJota Relaciona</title>
+    <script>
+      try {
+        const theme = localStorage.getItem('construjota-theme') || 'system'
+        const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.classList.toggle('dark', dark)
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
+      } catch (_) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
