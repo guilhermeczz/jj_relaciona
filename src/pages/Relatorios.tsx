@@ -17,7 +17,7 @@ export function Relatorios() {
   const vendedores = profiles.filter((p) => p.perfil === 'vendedor')
 
   const minhasLojas = useMemo(
-    () => (isAdmin ? lojas : lojas.filter((l) => l.vendedor_responsavel_id === user?.id)),
+    () => (isAdmin ? lojas : lojas.filter((l) => l.criado_por === user?.id)),
     [lojas, isAdmin, user],
   )
   const lojaIds = new Set(minhasLojas.map((l) => l.id))

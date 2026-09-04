@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Pencil, MessageCircle, Users, MapPin, Plus, Cake, Gift } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -19,7 +19,6 @@ import { toast } from 'sonner'
 
 export function LojaDetalhe() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const { getLoja, getContatosDaLoja, interacoes, brindes, treinamentoParticipantes, treinamentos, loadAll } = useData()
   const { user, isAdmin } = useAuth()
   const [tab, setTab] = useState('dados')
@@ -120,8 +119,8 @@ export function LojaDetalhe() {
           <TabsTrigger value="dados">Dados da loja</TabsTrigger>
           <TabsTrigger value="contatos">Contatos ({lojaContatos.length})</TabsTrigger>
           <TabsTrigger value="interacoes">Interações</TabsTrigger>
-          <TabsTrigger value="brindes">Brindes</TabsTrigger>
-          <TabsTrigger value="treinamentos">Treinamentos</TabsTrigger>
+          {isAdmin && <TabsTrigger value="brindes">Brindes</TabsTrigger>}
+          {isAdmin && <TabsTrigger value="treinamentos">Treinamentos</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="dados" className="mt-4">
@@ -161,7 +160,8 @@ export function LojaDetalhe() {
                     <div className="min-w-0">
                       <p className="font-medium text-brand-black">{c.nome}</p>
                       <p className="text-xs text-muted-foreground">{CargoTraducao(c.cargo)}</p>
-                      <p className="mt-1 text-xs">{c.whatsapp ?? c.telefone ?? c.email ?? '-'}</p>
+                      <p className="mt-1 text-xs">{c.whatsapp ?? c.email ?? '-'}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Hobby: {c.hobby ?? '-'}</p>
                     </div>
                     <Button
                       size="sm"
@@ -208,13 +208,13 @@ export function LojaDetalhe() {
           )}
         </TabsContent>
 
-        <TabsContent value="brindes" className="mt-4">
+        {isAdmin && <TabsContent value="brindes" className="mt-4">
           <div className="mb-3 flex justify-end">
             <Button
               variant="accent"
-              onClick={() => navigate(`/brindes?nova=${loja.id}`)}
+              asChild
             >
-              <Plus className="h-4 w-4" /> Novo brinde
+              <Link to={`/brindes?nova=${loja.id}`}><Plus className="h-4 w-4" /> Novo brinde</Link>
             </Button>
           </div>
           {lojaBrindes.length === 0 ? (
@@ -237,9 +237,9 @@ export function LojaDetalhe() {
               ))}
             </div>
           )}
-        </TabsContent>
+        </TabsContent>}
 
-        <TabsContent value="treinamentos" className="mt-4">
+        {isAdmin && <TabsContent value="treinamentos" className="mt-4">
           {lojaTreinamentos.length === 0 ? (
             <EmptyState icon={<Cake className="h-8 w-8" />} title="Loja não participa de treinamentos" />
           ) : (
@@ -265,7 +265,7 @@ export function LojaDetalhe() {
               })}
             </div>
           )}
-        </TabsContent>
+        </TabsContent>}
       </Tabs>
 
       <LojaDialog open={editOpen} onOpenChange={setEditOpen} loja={loja} />

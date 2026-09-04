@@ -79,12 +79,12 @@ export const router = createBrowserRouter([
           { path: '/lojas/:id', element: <LojaDetalhe /> },
           { path: '/contatos', element: <Contatos /> },
           { path: '/aniversariantes', element: <Aniversariantes /> },
-          { path: '/brindes', element: <Brindes /> },
           { path: '/interacoes', element: <Interacoes /> },
           {
             element: <AdminOnly />,
             children: [
               { path: '/treinamentos', element: <Treinamentos /> },
+              { path: '/brindes', element: <Brindes /> },
               { path: '/relatorios', element: <Relatorios /> },
               { path: '/usuarios', element: <Usuarios /> },
               { path: '/configuracoes', element: <Configuracoes /> },

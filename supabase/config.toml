@@ -5,3 +5,7 @@ project_id = "pipilvzgnnqqrrzzwsnj"
 # A requisição POST continua protegida por withSupabase({ auth: "user" })
 # e pela verificação do perfil administrador dentro do handler.
 verify_jwt = false
+
+[functions.processar-convites-email]
+# O endpoint e protegido por EMAIL_WORKER_SECRET e pode ser chamado por cron.
+verify_jwt = false

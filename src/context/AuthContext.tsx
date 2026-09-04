@@ -15,6 +15,14 @@ const USERNAME_DOMAIN = 'jj.com'
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
+function authUser(sessionUser: { id: string; email?: string | null } | undefined) {
+  return sessionUser ? { id: sessionUser.id, email: sessionUser.email ?? null } : null
+}
+
+function sameUser(current: AuthContextValue['user'], next: AuthContextValue['user']) {
+  return current?.id === next?.id && current?.email === next?.email
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthContextValue['user']>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -22,12 +30,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      const u = data.session?.user ?? null
-      setUser(u ? { id: u.id, email: u.email ?? null } : null)
+      const nextUser = authUser(data.session?.user)
+      setUser((current) => sameUser(current, nextUser) ? current : nextUser)
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      const u = session?.user ?? null
-      setUser(u ? { id: u.id, email: u.email ?? null } : null)
+      const nextUser = authUser(session?.user)
+      // TOKEN_REFRESHED tambem passa por aqui. Manter a mesma referencia evita
+      // desmontar a tela e perder seu estado quando a aba volta do segundo plano.
+      setUser((current) => sameUser(current, nextUser) ? current : nextUser)
     })
     return () => sub.subscription.unsubscribe()
   }, [])
@@ -56,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     }
     loadProfile()
-  }, [user])
+  }, [user?.id])
 
   async function signIn(username: string, password: string) {
     const normalizedUsername = username.trim().toLowerCase().replace(/\s+/g, '')

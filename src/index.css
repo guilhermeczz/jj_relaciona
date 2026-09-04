@@ -150,3 +150,21 @@
 .dark .login-light .text-brand-black {
   color: #111111;
 }
+
+.login-light .login-input {
+  color: #111111 !important;
+  caret-color: #111111;
+}
+
+.login-light .login-input::placeholder {
+  color: #737373;
+  opacity: 1;
+}
+
+.login-light .login-input:-webkit-autofill,
+.login-light .login-input:-webkit-autofill:hover,
+.login-light .login-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #111111 !important;
+  box-shadow: 0 0 0 1000px #fbfbfa inset;
+  caret-color: #111111;
+}

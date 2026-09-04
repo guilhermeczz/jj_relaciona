@@ -31,7 +31,7 @@ export function Contatos() {
   const [wa, setWa] = useState<{ phone: string; message: string } | null>(null)
 
   const lojasVisiveis = useMemo(
-    () => (isAdmin ? lojas : lojas.filter((l) => l.vendedor_responsavel_id === user?.id)),
+    () => (isAdmin ? lojas : lojas.filter((l) => l.criado_por === user?.id)),
     [lojas, isAdmin, user],
   )
   const lojaIds = new Set(lojasVisiveis.map((l) => l.id))
@@ -156,6 +156,7 @@ export function Contatos() {
                     {c.whatsapp ?? c.email}
                   </p>
                 )}
+                <p className="mt-2 text-xs text-muted-foreground">Hobby: {c.hobby ?? '-'}</p>
                 <div className="mt-2 flex flex-wrap gap-1">
                   {c.recebe_mensagens && <span className="rounded bg-brand-gray px-1.5 py-0.5 text-[10px]">Mensagens</span>}
                   {c.recebe_treinamentos && <span className="rounded bg-brand-gray px-1.5 py-0.5 text-[10px]">Treinamentos</span>}

@@ -34,6 +34,20 @@ export const CARGOS = [
   'outro',
 ]
 
+const EMPTY_FORM = {
+  loja_id: '',
+  nome: '',
+  cargo: '',
+  whatsapp: '',
+  hobby: '',
+  email: '',
+  data_nascimento: '',
+  recebe_mensagens: false,
+  recebe_treinamentos: false,
+  observacoes: '',
+  ativo: true,
+}
+
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -43,19 +57,7 @@ interface Props {
 
 export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
   const { lojas, loadAll } = useData()
-  const [form, setForm] = useState({
-    loja_id: '',
-    nome: '',
-    cargo: '',
-    whatsapp: '',
-    telefone: '',
-    email: '',
-    data_nascimento: '',
-    recebe_mensagens: true,
-    recebe_treinamentos: true,
-    observacoes: '',
-    ativo: true,
-  })
+  const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -66,7 +68,7 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
           nome: contato.nome,
           cargo: contato.cargo ?? '',
           whatsapp: contato.whatsapp ?? '',
-          telefone: contato.telefone ?? '',
+          hobby: contato.hobby ?? '',
           email: contato.email ?? '',
           data_nascimento: contato.data_nascimento ?? '',
           recebe_mensagens: contato.recebe_mensagens,
@@ -76,38 +78,48 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
         })
       } else {
         setForm({
+          ...EMPTY_FORM,
           loja_id: lojaId ?? lojas[0]?.id ?? '',
-          nome: '',
-          cargo: '',
-          whatsapp: '',
-          telefone: '',
-          email: '',
-          data_nascimento: '',
-          recebe_mensagens: true,
-          recebe_treinamentos: true,
-          observacoes: '',
-          ativo: true,
         })
       }
     }
-  }, [open, contato, lojaId, lojas])
+  }, [open, contato?.id, lojaId])
+
+  useEffect(() => {
+    if (open && !contato && !form.loja_id && lojas[0]?.id) {
+      setForm((current) => ({ ...current, loja_id: lojaId ?? lojas[0].id }))
+    }
+  }, [open, contato, form.loja_id, lojaId, lojas])
 
   function set<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((f) => ({ ...f, [key]: value }))
   }
 
   async function handleSubmit() {
-    if (!form.loja_id || !form.nome.trim()) {
-      toast.error('Informe a loja e o nome do contato')
+    const missingFields = [
+      !form.loja_id && 'loja',
+      !form.nome.trim() && 'nome',
+      !form.cargo && 'cargo',
+      !form.data_nascimento && 'data de nascimento',
+      !form.whatsapp.trim() && 'WhatsApp',
+      !form.hobby.trim() && 'hobby',
+    ].filter(Boolean)
+
+    if (missingFields.length > 0) {
+      toast.error(`Preencha os campos obrigatórios: ${missingFields.join(', ')}`)
+      return
+    }
+    if (!form.recebe_mensagens || !form.recebe_treinamentos) {
+      toast.error('As duas autorizações de LGPD são obrigatórias')
       return
     }
     setSaving(true)
     const payload = {
       loja_id: form.loja_id,
       nome: form.nome.trim(),
-      cargo: form.cargo || null,
-      whatsapp: form.whatsapp || null,
-      telefone: form.telefone || null,
+      cargo: form.cargo,
+      whatsapp: form.whatsapp.trim(),
+      hobby: form.hobby.trim(),
       email: form.email || null,
       data_nascimento: form.data_nascimento || null,
       recebe_mensagens: form.recebe_mensagens,
@@ -137,9 +149,9 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
         </DialogHeader>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Loja vinculada</Label>
+            <Label>Loja vinculada *</Label>
             <Select value={form.loja_id} onValueChange={(v) => set('loja_id', v)}>
-              <SelectTrigger>
+              <SelectTrigger aria-required="true">
                 <SelectValue placeholder="Selecione a loja" />
               </SelectTrigger>
               <SelectContent>
@@ -152,17 +164,16 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
             </Select>
           </div>
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Nome</Label>
-            <Input value={form.nome} onChange={(e) => set('nome', e.target.value)} placeholder="Nome do contato" />
+            <Label htmlFor="contato-nome">Nome *</Label>
+            <Input id="contato-nome" required value={form.nome} onChange={(e) => set('nome', e.target.value)} placeholder="Nome do contato" />
           </div>
           <div className="space-y-1.5">
-            <Label>Cargo / Função</Label>
-            <Select value={form.cargo || 'none'} onValueChange={(v) => set('cargo', v === 'none' ? '' : v)}>
-              <SelectTrigger>
+            <Label>Cargo / Função *</Label>
+            <Select value={form.cargo} onValueChange={(v) => set('cargo', v)}>
+              <SelectTrigger aria-required="true">
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Nenhum</SelectItem>
                 {CARGOS.map((c) => (
                   <SelectItem key={c} value={c}>
                     {c.charAt(0).toUpperCase() + c.slice(1)}
@@ -172,28 +183,29 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Data de nascimento</Label>
-            <Input type="date" value={form.data_nascimento} onChange={(e) => set('data_nascimento', e.target.value)} />
+            <Label htmlFor="contato-nascimento">Data de nascimento *</Label>
+            <Input id="contato-nascimento" required type="date" value={form.data_nascimento} onChange={(e) => set('data_nascimento', e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>WhatsApp</Label>
-            <Input value={form.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} placeholder="(00) 00000-0000" />
+            <Label htmlFor="contato-whatsapp">WhatsApp *</Label>
+            <Input id="contato-whatsapp" required value={form.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} placeholder="(00) 00000-0000" />
           </div>
           <div className="space-y-1.5">
-            <Label>Telefone</Label>
-            <Input value={form.telefone} onChange={(e) => set('telefone', e.target.value)} />
+            <Label htmlFor="contato-hobby">Hobby *</Label>
+            <Input id="contato-hobby" required value={form.hobby} onChange={(e) => set('hobby', e.target.value)} placeholder="Ex.: futebol, churrasco, pescaria..." />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <Label>E-mail</Label>
             <Input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Autorizações (LGPD)</Label>
+            <Label>Autorizações (LGPD) *</Label>
             <div className="flex flex-wrap gap-4 rounded-lg bg-brand-gray p-3">
               <label className="flex items-center gap-2 text-sm">
                 <Checkbox
                   checked={form.recebe_mensagens}
                   onCheckedChange={(v) => set('recebe_mensagens', Boolean(v))}
+                  aria-required="true"
                 />
                 Recebe mensagens
               </label>
@@ -201,6 +213,7 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
                 <Checkbox
                   checked={form.recebe_treinamentos}
                   onCheckedChange={(v) => set('recebe_treinamentos', Boolean(v))}
+                  aria-required="true"
                 />
                 Recebe convites de treinamento
               </label>
@@ -226,8 +239,8 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
           )}
         </div>
         <p className="text-xs text-muted-foreground">
-          Utilize os dados cadastrados apenas para relacionamento comercial autorizado com a loja e seus
-          representantes.
+          * Campos obrigatórios. Utilize os dados cadastrados apenas para relacionamento comercial autorizado
+          com a loja e seus representantes.
         </p>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

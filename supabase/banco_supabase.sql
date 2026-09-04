@@ -37,6 +37,7 @@ create table if not exists public.lojas (
   cep text,
   segmento text,
   vendedor_responsavel_id uuid references public.profiles(id) on delete set null,
+  criado_por uuid not null default auth.uid() references public.profiles(id) on delete restrict,
   status text not null default 'ativo' check (status in ('ativo', 'inativo')),
   observacoes text,
   created_at timestamptz not null default now(),
@@ -46,14 +47,14 @@ create table if not exists public.lojas (
 create table if not exists public.contatos_loja (
   id uuid primary key default gen_random_uuid(),
   loja_id uuid not null references public.lojas(id) on delete cascade,
-  nome text not null,
-  cargo text,
-  whatsapp text,
-  telefone text,
+  nome text not null check (btrim(nome) <> ''),
+  cargo text not null check (btrim(cargo) <> ''),
+  whatsapp text not null check (btrim(whatsapp) <> ''),
+  hobby text not null check (btrim(hobby) <> ''),
   email text,
-  data_nascimento date,
-  recebe_mensagens boolean not null default true,
-  recebe_treinamentos boolean not null default true,
+  data_nascimento date not null,
+  recebe_mensagens boolean not null default false check (recebe_mensagens),
+  recebe_treinamentos boolean not null default false check (recebe_treinamentos),
   observacoes text,
   ativo boolean not null default true,
   created_at timestamptz not null default now(),
@@ -115,6 +116,30 @@ create table if not exists public.treinamento_participantes (
   unique (treinamento_id, loja_id, contato_id)
 );
 
+-- Fila transacional para o futuro servidor de e-mails. O cadastro do convite
+-- e separado do envio, permitindo tentativas, auditoria e validacao posterior.
+create table if not exists public.convites_email (
+  id uuid primary key default gen_random_uuid(),
+  treinamento_participante_id uuid not null unique references public.treinamento_participantes(id) on delete cascade,
+  treinamento_id uuid not null references public.treinamentos(id) on delete cascade,
+  loja_id uuid not null references public.lojas(id) on delete cascade,
+  contato_id uuid references public.contatos_loja(id) on delete set null,
+  tipo_destinatario text not null check (tipo_destinatario in ('loja', 'contato')),
+  destinatario_nome text not null,
+  destinatario_email text,
+  email_validado boolean not null default false,
+  assunto text not null,
+  dados jsonb not null default '{}'::jsonb,
+  status text not null default 'pendente' check (status in ('pendente', 'sem_email', 'processando', 'enviado', 'erro', 'cancelado')),
+  tentativas integer not null default 0,
+  ultimo_erro text,
+  provider_id text,
+  agendado_para timestamptz not null default now(),
+  enviado_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- FUNÇÕES E TRIGGERS
 create or replace function public.set_updated_at()
 returns trigger
@@ -133,7 +158,8 @@ begin
   foreach table_name in array array[
     'profiles', 'lojas', 'contatos_loja', 'interacoes', 'brindes',
     'treinamentos',
-    'treinamento_participantes'
+    'treinamento_participantes',
+    'convites_email'
   ] loop
     execute format('drop trigger if exists set_%I_updated_at on public.%I', table_name, table_name);
     execute format('create trigger set_%I_updated_at before update on public.%I for each row execute function public.set_updated_at()', table_name, table_name);
@@ -233,14 +259,89 @@ create trigger protect_profile_access_fields
   before update on public.profiles
   for each row execute function public.protect_profile_access_fields();
 
+-- Registra de forma permanente quem cadastrou cada loja.
+create or replace function public.protect_loja_criador()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if tg_op = 'INSERT' then
+    new.criado_por = coalesce(auth.uid(), new.criado_por);
+  else
+    new.criado_por = old.criado_por;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists protect_loja_criador on public.lojas;
+create trigger protect_loja_criador
+  before insert or update on public.lojas
+  for each row execute function public.protect_loja_criador();
+
+create or replace function public.enfileirar_convite_treinamento()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  convite record;
+begin
+  select
+    t.nome as treinamento_nome,
+    t.tema,
+    t.data,
+    t.horario,
+    t.local,
+    case when new.contato_id is null then 'loja' else 'contato' end as tipo_destinatario,
+    case when new.contato_id is null then l.nome_fantasia else c.nome end as destinatario_nome,
+    case when new.contato_id is null then l.email else c.email end as destinatario_email
+  into convite
+  from public.treinamentos t
+  join public.lojas l on l.id = new.loja_id
+  left join public.contatos_loja c on c.id = new.contato_id
+  where t.id = new.treinamento_id;
+
+  insert into public.convites_email (
+    treinamento_participante_id, treinamento_id, loja_id, contato_id,
+    tipo_destinatario, destinatario_nome, destinatario_email, assunto, dados, status
+  ) values (
+    new.id, new.treinamento_id, new.loja_id, new.contato_id,
+    convite.tipo_destinatario, convite.destinatario_nome, nullif(btrim(convite.destinatario_email), ''),
+    'Convite: ' || convite.treinamento_nome,
+    jsonb_build_object(
+      'treinamento', convite.treinamento_nome,
+      'tema', convite.tema,
+      'data', convite.data,
+      'horario', convite.horario,
+      'local', convite.local,
+      'nome', convite.destinatario_nome
+    ),
+    case when nullif(btrim(convite.destinatario_email), '') is null then 'sem_email' else 'pendente' end
+  )
+  on conflict (treinamento_participante_id) do nothing;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists enfileirar_convite_treinamento on public.treinamento_participantes;
+create trigger enfileirar_convite_treinamento
+  after insert on public.treinamento_participantes
+  for each row execute function public.enfileirar_convite_treinamento();
+
 -- ÍNDICES
 create index if not exists idx_lojas_vendedor on public.lojas(vendedor_responsavel_id);
+create index if not exists idx_lojas_criador on public.lojas(criado_por);
 create index if not exists idx_contatos_loja on public.contatos_loja(loja_id);
 create index if not exists idx_interacoes_usuario_data on public.interacoes(usuario_id, data_interacao desc);
 create index if not exists idx_interacoes_loja on public.interacoes(loja_id);
 create index if not exists idx_brindes_vendedor on public.brindes(vendedor_responsavel_id);
 create index if not exists idx_brindes_loja on public.brindes(loja_id);
 create index if not exists idx_trein_part_loja on public.treinamento_participantes(loja_id);
+create index if not exists idx_convites_email_processamento on public.convites_email(status, agendado_para, created_at);
+create index if not exists idx_convites_email_treinamento on public.convites_email(treinamento_id);
 
 -- ROW LEVEL SECURITY
 alter table public.profiles enable row level security;
@@ -250,6 +351,7 @@ alter table public.interacoes enable row level security;
 alter table public.brindes enable row level security;
 alter table public.treinamentos enable row level security;
 alter table public.treinamento_participantes enable row level security;
+alter table public.convites_email enable row level security;
 
 -- Remove políticas de uma execução anterior para manter o arquivo reexecutável.
 do $$
@@ -259,7 +361,7 @@ begin
     select schemaname, tablename, policyname
     from pg_policies
     where schemaname = 'public'
-      and tablename in ('profiles','lojas','contatos_loja','interacoes','brindes','treinamentos','treinamento_participantes')
+      and tablename in ('profiles','lojas','contatos_loja','interacoes','brindes','treinamentos','treinamento_participantes','convites_email')
   loop
     execute format('drop policy if exists %I on %I.%I', policy_row.policyname, policy_row.schemaname, policy_row.tablename);
   end loop;
@@ -272,61 +374,62 @@ create policy profiles_update on public.profiles for update to authenticated
   with check (id = auth.uid() or public.is_admin());
 
 create policy lojas_select on public.lojas for select to authenticated
-  using (public.is_admin() or (public.is_active_user() and vendedor_responsavel_id = auth.uid()));
+  using (public.is_admin() or (public.is_active_user() and criado_por = auth.uid()));
 create policy lojas_insert on public.lojas for insert to authenticated
-  with check (public.is_admin() or (public.is_active_user() and vendedor_responsavel_id = auth.uid()));
+  with check (public.is_admin() or (public.is_active_user() and criado_por = auth.uid()));
 create policy lojas_update on public.lojas for update to authenticated
-  using (public.is_admin() or (public.is_active_user() and vendedor_responsavel_id = auth.uid()))
-  with check (public.is_admin() or (public.is_active_user() and vendedor_responsavel_id = auth.uid()));
+  using (public.is_admin() or (public.is_active_user() and criado_por = auth.uid()))
+  with check (public.is_admin() or (public.is_active_user() and criado_por = auth.uid()));
 create policy lojas_delete on public.lojas for delete to authenticated
   using (public.is_admin());
 
 create policy contatos_select on public.contatos_loja for select to authenticated
   using (public.is_admin() or (public.is_active_user() and exists (
-    select 1 from public.lojas where lojas.id = contatos_loja.loja_id and lojas.vendedor_responsavel_id = auth.uid()
+    select 1 from public.lojas where lojas.id = contatos_loja.loja_id and lojas.criado_por = auth.uid()
   )));
 create policy contatos_insert on public.contatos_loja for insert to authenticated
   with check (public.is_admin() or (public.is_active_user() and exists (
-    select 1 from public.lojas where lojas.id = contatos_loja.loja_id and lojas.vendedor_responsavel_id = auth.uid()
+    select 1 from public.lojas where lojas.id = contatos_loja.loja_id and lojas.criado_por = auth.uid()
   )));
 create policy contatos_update on public.contatos_loja for update to authenticated
   using (public.is_admin() or (public.is_active_user() and exists (
-    select 1 from public.lojas where lojas.id = contatos_loja.loja_id and lojas.vendedor_responsavel_id = auth.uid()
+    select 1 from public.lojas where lojas.id = contatos_loja.loja_id and lojas.criado_por = auth.uid()
   ))) with check (public.is_admin() or (public.is_active_user() and exists (
-    select 1 from public.lojas where lojas.id = contatos_loja.loja_id and lojas.vendedor_responsavel_id = auth.uid()
+    select 1 from public.lojas where lojas.id = contatos_loja.loja_id and lojas.criado_por = auth.uid()
   )));
 create policy contatos_delete on public.contatos_loja for delete to authenticated using (public.is_admin());
 
 -- O vendedor vê e contabiliza somente as próprias interações.
 create policy interacoes_select on public.interacoes for select to authenticated
-  using (public.is_admin() or (public.is_active_user() and usuario_id = auth.uid()));
+  using (public.is_admin() or (public.is_active_user() and exists (
+    select 1 from public.lojas where lojas.id = interacoes.loja_id and lojas.criado_por = auth.uid()
+  )));
 create policy interacoes_insert on public.interacoes for insert to authenticated
   with check (public.is_admin() or (public.is_active_user() and usuario_id = auth.uid() and exists (
-    select 1 from public.lojas where lojas.id = interacoes.loja_id and lojas.vendedor_responsavel_id = auth.uid()
+    select 1 from public.lojas where lojas.id = interacoes.loja_id and lojas.criado_por = auth.uid()
   )));
 create policy interacoes_update on public.interacoes for update to authenticated
-  using (public.is_admin() or (public.is_active_user() and usuario_id = auth.uid()))
-  with check (public.is_admin() or (public.is_active_user() and usuario_id = auth.uid()));
-create policy interacoes_delete on public.interacoes for delete to authenticated
-  using (public.is_admin() or (public.is_active_user() and usuario_id = auth.uid()));
-
-create policy brindes_select on public.brindes for select to authenticated
-  using (public.is_admin() or (public.is_active_user() and (vendedor_responsavel_id = auth.uid() or exists (
-    select 1 from public.lojas where lojas.id = brindes.loja_id and lojas.vendedor_responsavel_id = auth.uid()
-  ))));
-create policy brindes_insert on public.brindes for insert to authenticated
-  with check (public.is_admin() or (public.is_active_user() and vendedor_responsavel_id = auth.uid() and exists (
-    select 1 from public.lojas where lojas.id = brindes.loja_id and lojas.vendedor_responsavel_id = auth.uid()
+  using (public.is_admin() or (public.is_active_user() and usuario_id = auth.uid() and exists (
+    select 1 from public.lojas where lojas.id = interacoes.loja_id and lojas.criado_por = auth.uid()
+  )))
+  with check (public.is_admin() or (public.is_active_user() and usuario_id = auth.uid() and exists (
+    select 1 from public.lojas where lojas.id = interacoes.loja_id and lojas.criado_por = auth.uid()
   )));
-create policy brindes_update on public.brindes for update to authenticated
-  using (public.is_admin() or (public.is_active_user() and vendedor_responsavel_id = auth.uid()))
-  with check (public.is_admin() or (public.is_active_user() and vendedor_responsavel_id = auth.uid()));
-create policy brindes_delete on public.brindes for delete to authenticated using (public.is_admin());
+create policy interacoes_delete on public.interacoes for delete to authenticated
+  using (public.is_admin() or (public.is_active_user() and usuario_id = auth.uid() and exists (
+    select 1 from public.lojas where lojas.id = interacoes.loja_id and lojas.criado_por = auth.uid()
+  )));
+
+create policy brindes_admin_all on public.brindes for all to authenticated
+  using (public.is_admin()) with check (public.is_admin());
 
 create policy treinamentos_admin_all on public.treinamentos for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
 create policy trein_part_admin_write on public.treinamento_participantes for all to authenticated
+  using (public.is_admin()) with check (public.is_admin());
+
+create policy convites_email_admin_all on public.convites_email for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
 grant usage on schema public to authenticated;

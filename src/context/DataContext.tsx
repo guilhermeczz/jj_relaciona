@@ -41,7 +41,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const loadLojas = useCallback(async () => {
     const { data } = await supabase
       .from('lojas')
-      .select('*, vendedor:profiles!lojas_vendedor_responsavel_id_fkey(*)')
+      .select('*, vendedor:profiles!lojas_vendedor_responsavel_id_fkey(*), criador:profiles!lojas_criado_por_fkey(*)')
       .order('nome_fantasia')
     setLojas((data as Loja[]) ?? [])
   }, [])
@@ -81,11 +81,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
         .then(({ data }) => setProfiles((data as Profile[]) ?? [])),
     ])
     setLoading(false)
-  }, [user, loadLojas])
+  }, [user?.id, loadLojas])
 
   useEffect(() => {
     if (user) loadAll()
-  }, [user, loadAll])
+  }, [user?.id, loadAll])
 
   const getLoja = useCallback(
     (id: string) => lojas.find((l) => l.id === id),

@@ -27,7 +27,7 @@ const nav = [
   { to: '/contatos', label: 'Contatos', icon: Users },
   { to: '/aniversariantes', label: 'Aniversariantes', icon: Cake },
   { to: '/treinamentos', label: 'Treinamentos', icon: GraduationCap, adminOnly: true },
-  { to: '/brindes', label: 'Brindes', icon: Gift },
+  { to: '/brindes', label: 'Brindes', icon: Gift, adminOnly: true },
   { to: '/interacoes', label: 'Interações', icon: MessageSquare },
   { to: '/relatorios', label: 'Relatórios', icon: BarChart3, adminOnly: true },
   { to: '/usuarios', label: 'Usuários', icon: UserCog, adminOnly: true },
@@ -39,7 +39,7 @@ const sellerMobile = [
   { to: '/lojas', label: 'Lojas', icon: Store },
   { to: '/aniversariantes', label: 'Agenda', icon: CalendarDays },
   { to: '/contatos', label: 'Contatos', icon: Users },
-  { to: '/brindes', label: 'Brindes', icon: Gift },
+  { to: '/interacoes', label: 'Interações', icon: MessageSquare },
 ]
 
 const adminMobile = [

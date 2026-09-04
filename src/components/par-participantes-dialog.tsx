@@ -78,7 +78,7 @@ export function ParParticipantesDialog({ open, onOpenChange, treinamento }: Prop
   }
 
   function convidar(participante: (typeof participantes)[number]) {
-    const phone = participante.contato?.whatsapp ?? participante.contato?.telefone ?? participante.loja?.whatsapp ?? participante.loja?.telefone
+    const phone = participante.contato?.whatsapp ?? participante.loja?.whatsapp ?? participante.loja?.telefone
     if (!phone) {
       toast.error('Sem WhatsApp cadastrado para este participante.')
       return
@@ -128,6 +128,9 @@ export function ParParticipantesDialog({ open, onOpenChange, treinamento }: Prop
             <div key={participante.id} className="flex flex-col justify-between gap-3 rounded-xl border p-3 sm:flex-row sm:items-center">
               <div className="min-w-0">
                 <p className="font-medium text-brand-black">{participante.loja?.nome_fantasia}{participante.contato ? ` · ${participante.contato.nome}` : ''}</p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">
+                  E-mail: {participante.contato?.email ?? participante.loja?.email ?? 'não cadastrado'}
+                </p>
                 <div className="mt-2 flex flex-wrap items-center gap-3">
                   <label className="flex items-center gap-1.5 text-xs"><Input type="checkbox" className="h-4 w-4" checked={participante.confirmado} onChange={(event) => atualizarParticipante(participante.id, 'confirmado', event.target.checked)} /> Confirmado</label>
                   <label className="flex items-center gap-1.5 text-xs"><Input type="checkbox" className="h-4 w-4" checked={participante.compareceu} onChange={(event) => atualizarParticipante(participante.id, 'compareceu', event.target.checked)} /> Compareceu</label>

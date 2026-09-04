@@ -102,11 +102,11 @@ export function Login() {
                   id="username"
                   autoComplete="username"
                   inputMode="text"
-                  placeholder="ex.: joao.silva"
+                  placeholder="Usuário"
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))}
                   required
-                  className="h-12 rounded-xl bg-[#fbfbfa] px-4"
+                  className="login-input h-12 rounded-xl bg-[#fbfbfa] px-4"
                 />
               </div>
               <div className="space-y-2">
@@ -123,7 +123,7 @@ export function Login() {
                     minLength={6}
                     maxLength={6}
                     required
-                    className="h-12 rounded-xl bg-[#fbfbfa] px-4 pr-12 tracking-[0.35em]"
+                    className="login-input h-12 rounded-xl bg-[#fbfbfa] px-4 pr-12 tracking-[0.35em]"
                   />
                   <button
                     type="button"

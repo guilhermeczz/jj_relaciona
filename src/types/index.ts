@@ -27,11 +27,13 @@ export interface Loja {
   cep?: string | null
   segmento?: string | null
   vendedor_responsavel_id?: string | null
+  criado_por?: string | null
   status: 'ativo' | 'inativo'
   observacoes?: string | null
   created_at: string
   updated_at?: string
   vendedor?: Profile | null
+  criador?: Profile | null
   contatos_count?: number
   ultima_interacao?: string | null
 }
@@ -42,7 +44,7 @@ export interface Contato {
   nome: string
   cargo?: string | null
   whatsapp?: string | null
-  telefone?: string | null
+  hobby?: string | null
   email?: string | null
   data_nascimento?: string | null
   recebe_mensagens: boolean

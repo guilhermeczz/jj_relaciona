@@ -37,7 +37,7 @@ interface Props {
 
 export function BrindeDialog({ open, onOpenChange, lojaId, contatoId, brinde }: Props) {
   const { lojas, loadAll, getContatosDaLoja } = useData()
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const [loja, setLoja] = useState(lojaId ?? '')
   const [contato, setContato] = useState(contatoId ?? '')
   const [motivo, setMotivo] = useState('relacionamento')
@@ -73,6 +73,7 @@ export function BrindeDialog({ open, onOpenChange, lojaId, contatoId, brinde }: 
   }, [open, brinde, lojaId, contatoId, lojas])
 
   const contatosDaLoja = loja ? getContatosDaLoja(loja) : []
+  const contatoSelecionado = contatosDaLoja.find((item) => item.id === contato)
 
   async function handleSubmit() {
     if (!loja || !descricao.trim()) {
@@ -88,7 +89,7 @@ export function BrindeDialog({ open, onOpenChange, lojaId, contatoId, brinde }: 
       status,
       data_prevista: dataPrevista || null,
       data_envio: status === 'enviado' && dataEnvio ? dataEnvio : dataEnvio || null,
-      vendedor_responsavel_id: brinde?.vendedor_responsavel_id ?? lojas.find((item) => item.id === loja)?.vendedor_responsavel_id ?? user?.id ?? null,
+      vendedor_responsavel_id: brinde?.vendedor_responsavel_id ?? (isAdmin ? lojas.find((item) => item.id === loja)?.vendedor_responsavel_id : user?.id) ?? null,
       observacoes: observacoes || null,
     }
     const { error } = brinde
@@ -114,7 +115,7 @@ export function BrindeDialog({ open, onOpenChange, lojaId, contatoId, brinde }: 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Loja</Label>
-            <Select value={loja} onValueChange={setLoja}>
+            <Select value={loja} onValueChange={(value) => { setLoja(value); setContato('') }}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a loja" />
               </SelectTrigger>
@@ -142,6 +143,11 @@ export function BrindeDialog({ open, onOpenChange, lojaId, contatoId, brinde }: 
                 ))}
               </SelectContent>
             </Select>
+            {contatoSelecionado && (
+              <p className="rounded-md bg-brand-gray px-3 py-2 text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">Hobby:</span> {contatoSelecionado.hobby ?? 'Não informado'}
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>Motivo</Label>

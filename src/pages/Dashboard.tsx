@@ -4,7 +4,6 @@ import {
   ArrowRight,
   Bell,
   Cake,
-  CalendarDays,
   Gift,
   GraduationCap,
   MapPin,
@@ -12,6 +11,7 @@ import {
   Plus,
   Store,
   HeartHandshake,
+  UserCog,
   Users,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -76,7 +76,7 @@ function buildBirthdays(lojas: Loja[], contatos: ReturnType<typeof useData>['con
         tipo: 'contato', nome: contato.nome, data: contato.data_nascimento!,
         mes: date.getMonth() + 1, dia: date.getDate(), contatoId: contato.id,
         lojaId: loja.id, lojaNome: loja.nome_fantasia,
-        telefone: contato.whatsapp || contato.telefone,
+        telefone: contato.whatsapp,
       })
     })
   })
@@ -84,39 +84,29 @@ function buildBirthdays(lojas: Loja[], contatos: ReturnType<typeof useData>['con
 }
 
 function AdminDashboard() {
-  const { lojas, contatos, brindes, treinamentos, interacoes } = useData()
+  const { lojas, contatos, brindes, treinamentos, interacoes, profiles } = useData()
   const birthdays = useMemo(() => buildBirthdays(lojas, contatos), [lojas, contatos])
   const pendingGifts = brindes.filter((gift) => gift.status === 'pendente' || gift.status === 'separado')
   const scheduledTrainings = treinamentos.filter((training) => training.status === 'programado')
-
-  const monthlyActivity = useMemo(() => {
-    const formatter = new Intl.DateTimeFormat('pt-BR', { month: 'short' })
-    return Array.from({ length: 6 }, (_, index) => {
-      const date = new Date()
-      date.setMonth(date.getMonth() - (5 - index))
-      const amount = interacoes.filter((interaction) => {
-        const interactionDate = new Date(interaction.data_interacao)
-        return interactionDate.getMonth() === date.getMonth() && interactionDate.getFullYear() === date.getFullYear()
-      }).length
-      return { label: formatter.format(date).replace('.', ''), amount }
-    })
-  }, [interacoes])
-  const maxActivity = Math.max(...monthlyActivity.map((item) => item.amount), 1)
-  const registeredGifts = brindes.filter((gift) => gift.status === 'enviado').length
-  const giftProgress = brindes.length ? Math.round((registeredGifts / brindes.length) * 100) : 0
+  const activeStores = lojas.filter((store) => store.status === 'ativo').length
+  const activeContacts = contatos.filter((contact) => contact.ativo).length
+  const activeSellers = profiles.filter((profile) => profile.perfil === 'vendedor' && profile.ativo).length
 
   return (
     <div className="mx-auto max-w-[1480px]">
-      <div className="mb-5 lg:hidden">
+      <div className="mb-5">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9a7800]">Visão administrativa</p>
-        <h1 className="mt-1 text-2xl font-extrabold tracking-tight">Resumo da operação</h1>
+        <h1 className="mt-1 text-2xl font-extrabold tracking-tight">Visão geral do sistema</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Resumo consolidado de tudo o que foi cadastrado.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4 xl:gap-4">
-        <MetricCard label="Lojas cadastradas" value={formatNumber.format(lojas.length)} helper="Carteira total da equipe" icon={Store} />
-        <MetricCard label="Contatos cadastrados" value={formatNumber.format(contatos.length)} helper="Contatos ativos nas lojas" icon={Users} />
-        <MetricCard label="Próximos aniversários" value={birthdays.length} helper="Nos próximos 7 dias" icon={Cake} />
-        <MetricCard label="Brindes pendentes" value={pendingGifts.length} helper="Aguardando andamento" icon={Gift} dark />
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-3 xl:gap-4">
+        <MetricCard label="Lojas" value={formatNumber.format(lojas.length)} helper={`${activeStores} ativas`} icon={Store} />
+        <MetricCard label="Contatos" value={formatNumber.format(contatos.length)} helper={`${activeContacts} ativos`} icon={Users} />
+        <MetricCard label="Vendedores" value={formatNumber.format(activeSellers)} helper="Usuários ativos" icon={UserCog} />
+        <MetricCard label="Interações" value={formatNumber.format(interacoes.length)} helper="Registros de relacionamento" icon={MessageSquarePlus} />
+        <MetricCard label="Brindes" value={formatNumber.format(brindes.length)} helper={`${pendingGifts.length} pendentes`} icon={Gift} />
+        <MetricCard label="Treinamentos" value={formatNumber.format(treinamentos.length)} helper={`${scheduledTrainings.length} programados`} icon={GraduationCap} dark />
       </div>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[1.45fr_0.9fr]">
@@ -160,77 +150,29 @@ function AdminDashboard() {
         </Card>
       </div>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1.45fr_0.9fr]">
-        <Card className="overflow-hidden bg-white">
-          <SectionTitle title="Engajamento da equipe" to="/relatorios" link="Relatórios" />
-          <CardContent className="px-5 pb-5 pt-6">
-            <div className="flex h-44 items-end gap-3 sm:gap-5">
-              {monthlyActivity.map((item) => (
-                <div key={item.label} className="flex h-full flex-1 flex-col justify-end gap-2 text-center">
-                  <span className="text-[10px] font-semibold text-muted-foreground">{item.amount}</span>
-                  <div className="mx-auto w-full max-w-12 rounded-t-lg bg-accent transition-all" style={{ height: `${Math.max((item.amount / maxActivity) * 100, 7)}%` }} />
-                  <span className="text-[10px] capitalize text-muted-foreground">{item.label}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-1">
-          <Card className="overflow-hidden bg-white">
-            <SectionTitle title="Próximos treinamentos" to="/treinamentos" />
-            <CardContent className="space-y-3 p-4">
-              {scheduledTrainings.slice(0, 2).map((training) => (
-                <div key={training.id} className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-orange-500"><CalendarDays className="h-4 w-4" /></span>
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-semibold">{training.nome}</p>
-                    <p className="mt-1 text-[10px] text-muted-foreground">{formatDataBR(training.data)} {training.horario ? `· ${training.horario.slice(0, 5)}` : ''}</p>
-                  </div>
-                </div>
-              ))}
-              {!scheduledTrainings.length && <p className="py-4 text-center text-xs text-muted-foreground">Nenhum treinamento programado.</p>}
-            </CardContent>
-          </Card>
-
-          <Card className="bg-brand-black text-white">
-            <CardContent className="flex items-center gap-5 p-5">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-[8px] border-accent text-lg font-extrabold">{giftProgress}%</div>
-              <div>
-                <p className="text-sm font-bold">Registro de brindes</p>
-                <p className="mt-1 text-xs text-white/55">{registeredGifts} de {brindes.length} concluídos</p>
-                <Link to="/brindes" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-accent">Ver detalhes <ArrowRight className="h-3 w-3" /></Link>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
     </div>
   )
 }
 
 function SellerDashboard() {
   const { profile, user } = useAuth()
-  const { lojas, contatos, treinamentos, brindes, interacoes } = useData()
-  const myStores = lojas.filter((store) => store.vendedor_responsavel_id === user?.id)
+  const { lojas, contatos, interacoes } = useData()
+  const myStores = lojas.filter((store) => store.criado_por === user?.id)
   const myStoreIds = new Set(myStores.map((store) => store.id))
   const birthdays = useMemo(() => buildBirthdays(myStores, contatos), [myStores, contatos])
-  const scheduledTrainings = treinamentos.filter((training) => training.status === 'programado')
   const now = new Date()
   const monthInteractions = interacoes.filter((interaction) => {
     const date = new Date(interaction.data_interacao)
     return myStoreIds.has(interaction.loja_id) && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()
   }).length
-  const pendingGifts = brindes.filter((gift) =>
-    myStoreIds.has(gift.loja_id) && (gift.status === 'pendente' || gift.status === 'separado'),
-  ).length
+  const myContacts = contatos.filter((contact) => myStoreIds.has(contact.loja_id) && contact.ativo)
 
   const quickActions = [
     { to: '/lojas', label: 'Minhas lojas', value: myStores.length, icon: Store, highlighted: true },
     { to: '/lojas', label: 'Cadastrar loja', value: 'Nova', icon: Plus },
     { to: '/aniversariantes', label: 'Aniversariantes', value: birthdays.length, icon: Cake },
-    { to: '/brindes', label: 'Brindes', value: pendingGifts, icon: Gift },
-    { to: '/treinamentos', label: 'Treinamentos', value: scheduledTrainings.length, icon: GraduationCap, wide: true },
+    { to: '/interacoes', label: 'Interações', value: monthInteractions, icon: MessageSquarePlus },
+    { to: '/contatos', label: 'Contatos', value: contatos.length, icon: Users, wide: true },
   ]
 
   return (
@@ -257,7 +199,7 @@ function SellerDashboard() {
           <div className="grid grid-cols-3 divide-x divide-white/10 rounded-xl bg-black/20 py-3 text-center">
             <div><p className="text-lg font-extrabold text-accent">{monthInteractions}</p><p className="mt-1 text-[9px] text-white/45">Interações</p></div>
             <div><p className="text-lg font-extrabold text-accent">{birthdays.length}</p><p className="mt-1 text-[9px] text-white/45">Aniversários</p></div>
-            <div><p className="text-lg font-extrabold text-accent">{pendingGifts}</p><p className="mt-1 text-[9px] text-white/45">Brindes</p></div>
+            <div><p className="text-lg font-extrabold text-accent">{myContacts.length}</p><p className="mt-1 text-[9px] text-white/45">Contatos</p></div>
           </div>
         </div>
       </section>
@@ -284,7 +226,7 @@ function SellerDashboard() {
                   <ArrowRight className="h-4 w-4 text-muted-foreground" />
                 </Link>
               ))}
-              {!myStores.length && <p className="px-5 py-10 text-center text-sm text-muted-foreground">Nenhuma loja vinculada à sua carteira.</p>}
+              {!myStores.length && <p className="px-5 py-10 text-center text-sm text-muted-foreground">Você ainda não cadastrou nenhuma loja.</p>}
             </CardContent>
           </Card>
 

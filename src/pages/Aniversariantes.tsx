@@ -34,7 +34,7 @@ export function Aniversariantes() {
   const vendedores = profiles.filter((p) => p.perfil === 'vendedor')
 
   const minhasLojas = useMemo(
-    () => (isAdmin ? lojas : lojas.filter((l) => l.vendedor_responsavel_id === user?.id)),
+    () => (isAdmin ? lojas : lojas.filter((l) => l.criado_por === user?.id)),
     [lojas, isAdmin, user],
   )
 
@@ -69,7 +69,7 @@ export function Aniversariantes() {
             contatoId: c.id,
             lojaId: l.id,
             lojaNome: l.nome_fantasia,
-            telefone: c.whatsapp || c.telefone,
+            telefone: c.whatsapp,
             vendedorNome: l.vendedor?.nome,
             vendedorId: l.vendedor_responsavel_id ?? undefined,
           })
@@ -182,13 +182,15 @@ export function Aniversariantes() {
                   >
                     <MessageCircle className="h-4 w-4" /> WhatsApp
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setBrindeTarget({ lojaId: a.lojaId ?? '', contatoId: a.contatoId })}
-                  >
-                    <Gift className="h-4 w-4" /> Brinde
-                  </Button>
+                  {isAdmin && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setBrindeTarget({ lojaId: a.lojaId ?? '', contatoId: a.contatoId })}
+                    >
+                      <Gift className="h-4 w-4" /> Brinde
+                    </Button>
+                  )}
                   <Button
                     size="sm"
                     variant="outline"
@@ -209,12 +211,14 @@ export function Aniversariantes() {
         phone={wa?.phone}
         defaultMessage={wa?.message ?? ''}
       />
-      <BrindeDialog
-        open={!!brindeTarget}
-        onOpenChange={(o) => !o && setBrindeTarget(null)}
-        lojaId={brindeTarget?.lojaId}
-        contatoId={brindeTarget?.contatoId}
-      />
+      {isAdmin && (
+        <BrindeDialog
+          open={!!brindeTarget}
+          onOpenChange={(o) => !o && setBrindeTarget(null)}
+          lojaId={brindeTarget?.lojaId}
+          contatoId={brindeTarget?.contatoId}
+        />
+      )}
       <InteracaoDialog
         open={!!interacaoTarget}
         onOpenChange={(o) => !o && setInteracaoTarget(null)}

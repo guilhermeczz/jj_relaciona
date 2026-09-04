@@ -42,9 +42,7 @@ export function Brindes() {
     () =>
       isAdmin
         ? brindes
-        : brindes.filter(
-            (b) => b.vendedor_responsavel_id === user?.id || (b.loja && lojas.find((l) => l.id === b.loja_id)?.vendedor_responsavel_id === user?.id),
-          ),
+        : brindes.filter((b) => lojas.find((l) => l.id === b.loja_id)?.criado_por === user?.id),
     [brindes, isAdmin, user, lojas],
   )
 
@@ -130,6 +128,9 @@ export function Brindes() {
                   {b.motivo?.replace('_', ' ')} · prev. {formatDataBR(b.data_prevista)}
                 </p>
                 <p className="text-xs text-muted-foreground">Vendedor: {b.vendedor?.nome ?? '-'}</p>
+                {b.contato && (
+                  <p className="text-xs text-muted-foreground">Hobby: {b.contato.hobby ?? '-'}</p>
+                )}
                 <div className="mt-3 flex gap-2">
                   {b.status !== 'enviado' && b.status !== 'cancelado' && (
                     <Button size="sm" variant="outline" className="flex-1" onClick={() => mudarStatus(b, 'enviado')}>

@@ -33,7 +33,7 @@ export function Lojas() {
 
   const vendedores = profiles.filter((p) => p.perfil === 'vendedor')
   const minhasLojas = useMemo(
-    () => (isAdmin ? lojas : lojas.filter((l) => l.vendedor_responsavel_id === user?.id)),
+    () => (isAdmin ? lojas : lojas.filter((l) => l.criado_por === user?.id)),
     [lojas, isAdmin, user],
   )
 
@@ -133,6 +133,7 @@ export function Lojas() {
                 <p className="mt-2 text-xs text-muted-foreground">
                   Vendedor: {l.vendedor?.nome ?? '-'}
                 </p>
+                {isAdmin && <p className="text-xs text-muted-foreground">Cadastrada por: {l.criador?.nome ?? '-'}</p>}
                 <p className="text-xs text-muted-foreground">{contatosDaLoja(l.id)} contato(s)</p>
                 <div className="mt-3 flex gap-2">
                   <Button asChild size="sm" variant="outline" className="flex-1">
