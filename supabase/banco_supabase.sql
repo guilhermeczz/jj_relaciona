@@ -502,7 +502,7 @@ grant execute on function public.is_admin() to authenticated;
 grant execute on function public.current_profile() to authenticated;
 grant execute on function public.is_active_user() to authenticated;
 
--- ============================================================
+-- ============================================================---
 -- PRIMEIRO ADMINISTRADOR
 -- 1. Em Authentication > Users, crie o e-mail:
 --      admin@jj.com
