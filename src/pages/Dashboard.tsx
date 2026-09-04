@@ -30,15 +30,15 @@ function MetricCard({ label, value, helper, icon: Icon }: {
   icon: typeof Store
 }) {
   return (
-    <Card className="border-[#e2bd32] bg-[#fff0a8] text-[#2b250f] dark:border-[#75601d] dark:bg-[#4a3e1b] dark:text-[#fff5c2]">
+    <Card className="border-[#e0ad00] bg-[#ffca05] text-[#111111] dark:border-[#ffd83d] dark:bg-[#ffca05] dark:text-[#111111]">
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-[#71601f] dark:text-[#e8d583]">{label}</p>
+            <p className="text-xs font-semibold text-[#554300]">{label}</p>
             <p className="mt-2 text-2xl font-extrabold tracking-tight sm:text-[28px]">{value}</p>
-            <p className="mt-1 text-[11px] text-[#71601f] dark:text-[#d8c77c]">{helper}</p>
+            <p className="mt-1 text-[11px] text-[#554300]">{helper}</p>
           </div>
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#e5b900] text-[#211c08] shadow-sm dark:bg-accent">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#111111] text-[#ffca05] shadow-sm">
             <Icon className="h-5 w-5" strokeWidth={2.2} />
           </span>
         </div>

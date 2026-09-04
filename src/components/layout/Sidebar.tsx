@@ -69,7 +69,7 @@ export function Sidebar() {
   const links = profile?.perfil === 'admin' ? nav : nav.filter((n) => !n.adminOnly)
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-[258px] shrink-0 flex-col bg-[#292823] text-white md:flex">
+    <aside className="sticky top-0 hidden h-screen w-[258px] shrink-0 flex-col bg-[#090909] text-white md:flex">
       <div className="px-6 pb-7 pt-6">
         <Brand />
       </div>

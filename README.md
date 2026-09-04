@@ -1,6 +1,6 @@
 # ConstruJota Relaciona
 
-CRM responsivo para a equipe comercial da ConstruJota. O administrador acompanha toda a operação; cada vendedor acessa somente sua carteira e suas interações com os clientes.
+CRM responsivo para a equipe comercial da ConstruJota. O administrador acompanha toda a operação; cada vendedor acessa somente as lojas que cadastrou e os respectivos dados de relacionamento.
 
 ## Rodar o projeto
 
@@ -16,6 +16,30 @@ Para validar a versão de produção:
 ```bash
 npm run build
 ```
+
+## Publicar na Vercel
+
+O projeto já contém o arquivo `vercel.json`, incluindo o build do Vite e o redirecionamento das rotas internas para a aplicação React.
+
+1. Envie o projeto para um repositório GitHub, GitLab ou Bitbucket.
+2. Na Vercel, selecione **Add New > Project** e importe o repositório.
+3. Confirme as configurações detectadas:
+   - Framework Preset: `Vite`;
+   - Install Command: `npm ci`;
+   - Build Command: `npm run build`;
+   - Output Directory: `dist`.
+4. Em **Environment Variables**, cadastre para Production, Preview e Development:
+
+```env
+VITE_SUPABASE_URL=https://SEU-PROJETO.supabase.co
+VITE_SUPABASE_ANON_KEY=SUA-CHAVE-ANON
+```
+
+5. Clique em **Deploy**.
+
+Não cadastre na Vercel `service_role`, tokens administrativos ou os segredos do servidor de e-mails. Esses valores pertencem exclusivamente ao ambiente protegido das Edge Functions do Supabase.
+
+Depois do primeiro deploy, abra diretamente uma rota interna, como `/lojas`, e atualize a página. O redirecionamento configurado deve manter a aplicação funcionando sem retornar erro 404.
 
 ## Preparar o Supabase
 
