@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Plus, Search, Store, MessageCircle, MapPin } from 'lucide-react'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
@@ -19,15 +19,27 @@ import { StatusBadge } from '@/components/status-badge'
 import { LojaDialog } from '@/components/loja-dialog'
 import { WhatsAppDialog } from '@/components/whatsapp-dialog'
 import { EmptyState } from '@/components/empty-state'
+import { DateRangeFilter } from '@/components/date-range-filter'
 import { useData } from '@/context/DataContext'
 import { useAuth } from '@/context/AuthContext'
+import { comparePtBr, isWithinDateRange } from '@/lib/filters'
+import { ListPagination } from '@/components/list-pagination'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+const PAGE_SIZE = 30
 
 export function Lojas() {
   const { lojas, contatos, profiles } = useData()
   const { user, isAdmin } = useAuth()
   const [search, setSearch] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const aba = searchParams.get('aba') === 'inativas' ? 'inativas' : 'ativas'
   const [fVendedor, setFVendedor] = useState('')
-  const [fStatus, setFStatus] = useState('')
+  const [fCidade, setFCidade] = useState('')
+  const [fSegmento, setFSegmento] = useState('')
+  const [dataInicio, setDataInicio] = useState('')
+  const [dataFim, setDataFim] = useState('')
+  const [page, setPage] = useState(1)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [wa, setWa] = useState<{ phone: string; message: string; nome: string } | null>(null)
 
@@ -36,6 +48,10 @@ export function Lojas() {
     () => (isAdmin ? lojas : lojas.filter((l) => l.criado_por === user?.id)),
     [lojas, isAdmin, user],
   )
+  const cidades = [...new Set(minhasLojas.map((loja) => loja.cidade).filter((cidade): cidade is string => Boolean(cidade)))].sort(comparePtBr)
+  const segmentos = [...new Set(minhasLojas.map((loja) => loja.segmento).filter((segmento): segmento is string => Boolean(segmento)))].sort(comparePtBr)
+  const totalAtivas = minhasLojas.filter((loja) => loja.status === 'ativo').length
+  const totalInativas = minhasLojas.filter((loja) => loja.status === 'inativo').length
 
   const filtered = useMemo(() => {
     const term = search.toLowerCase()
@@ -46,10 +62,16 @@ export function Lojas() {
         (l.cnpj ?? '').toLowerCase().includes(term) ||
         (l.cidade ?? '').toLowerCase().includes(term)
       const matchV = !fVendedor || l.vendedor_responsavel_id === fVendedor
-      const matchS = !fStatus || l.status === fStatus
-      return matchTerm && matchV && matchS
-    })
-  }, [minhasLojas, search, fVendedor, fStatus])
+      const matchAba = aba === 'inativas' ? l.status === 'inativo' : l.status === 'ativo'
+      const matchC = !fCidade || l.cidade === fCidade
+      const matchSegmento = !fSegmento || l.segmento === fSegmento
+      const matchDate = isWithinDateRange(l.created_at, dataInicio, dataFim)
+      return matchTerm && matchV && matchAba && matchC && matchSegmento && matchDate
+    }).sort((a, b) => comparePtBr(a.nome_fantasia, b.nome_fantasia))
+  }, [minhasLojas, search, fVendedor, aba, fCidade, fSegmento, dataInicio, dataFim])
+  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  useEffect(() => setPage(1), [search, fVendedor, aba, fCidade, fSegmento, dataInicio, dataFim])
 
   const contatosDaLoja = (lojaId: string) =>
     contatos.filter((c) => c.loja_id === lojaId && c.ativo).length
@@ -66,8 +88,19 @@ export function Lojas() {
         }
       />
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1">
+      <Tabs
+        value={aba}
+        onValueChange={(value) => setSearchParams(value === 'inativas' ? { aba: 'inativas' } : {})}
+        className="mb-4"
+      >
+        <TabsList className="grid h-auto w-full grid-cols-2 sm:w-auto">
+          <TabsTrigger value="ativas">Ativas ({totalAtivas})</TabsTrigger>
+          <TabsTrigger value="inativas">Inativas ({totalInativas})</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <div className="relative flex-1 sm:min-w-64">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-9"
@@ -89,23 +122,22 @@ export function Lojas() {
             ))}
           </SelectContent>
         </Select>}
-        <Select value={fStatus || 'todos'} onValueChange={(value) => setFStatus(value === 'todos' ? '' : value)}>
-          <SelectTrigger className="sm:w-36">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos</SelectItem>
-            <SelectItem value="ativo">Ativo</SelectItem>
-            <SelectItem value="inativo">Inativo</SelectItem>
-          </SelectContent>
+        <Select value={fCidade || 'todas'} onValueChange={(value) => setFCidade(value === 'todas' ? '' : value)}>
+          <SelectTrigger className="sm:w-44"><SelectValue placeholder="Cidade" /></SelectTrigger>
+          <SelectContent><SelectItem value="todas">Todas as cidades</SelectItem>{cidades.map((cidade) => <SelectItem key={cidade} value={cidade}>{cidade}</SelectItem>)}</SelectContent>
         </Select>
+        <Select value={fSegmento || 'todos'} onValueChange={(value) => setFSegmento(value === 'todos' ? '' : value)}>
+          <SelectTrigger className="sm:w-52"><SelectValue placeholder="Segmento" /></SelectTrigger>
+          <SelectContent><SelectItem value="todos">Todos os segmentos</SelectItem>{segmentos.map((segmento) => <SelectItem key={segmento} value={segmento}>{segmento}</SelectItem>)}</SelectContent>
+        </Select>
+        <DateRangeFilter inicio={dataInicio} fim={dataFim} onInicioChange={setDataInicio} onFimChange={setDataFim} label="Cadastro" />
       </div>
 
       {filtered.length === 0 ? (
         <EmptyState
           icon={<Store className="h-8 w-8" />}
-          title="Nenhuma loja encontrada"
-          description="Cadastre uma nova loja ou ajuste os filtros."
+          title={aba === 'inativas' ? 'Nenhuma loja inativa' : 'Nenhuma loja ativa encontrada'}
+          description={aba === 'inativas' ? 'As lojas inativadas aparecerão aqui.' : 'Cadastre uma nova loja ou ajuste os filtros.'}
           action={
             <Button variant="accent" onClick={() => setDialogOpen(true)}>
               <Plus className="h-4 w-4" /> Nova loja
@@ -113,12 +145,11 @@ export function Lojas() {
           }
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {filtered.map((l) => (
-            <Card key={l.id} className="bg-white transition-shadow hover:shadow-md">
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
+        <Card className="overflow-hidden bg-white">
+          <CardContent className="divide-y p-0">
+          {pageItems.map((l) => (
+            <div key={l.id} className="flex flex-col gap-3 p-4 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center">
+                  <div className="min-w-0 flex-1 sm:basis-64">
                     <Link to={`/lojas/${l.id}`} className="font-semibold text-brand-black hover:underline">
                       {l.nome_fantasia}
                     </Link>
@@ -128,15 +159,14 @@ export function Lojas() {
                       </p>
                     )}
                   </div>
-                  <StatusBadge value={l.status} />
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Vendedor: {l.vendedor?.nome ?? '-'}
-                </p>
-                {isAdmin && <p className="text-xs text-muted-foreground">Cadastrada por: {l.criador?.nome ?? '-'}</p>}
-                <p className="text-xs text-muted-foreground">{contatosDaLoja(l.id)} contato(s)</p>
-                <div className="mt-3 flex gap-2">
-                  <Button asChild size="sm" variant="outline" className="flex-1">
+                  <div className="min-w-0 flex-1 text-xs text-muted-foreground sm:basis-48">
+                    <p>Vendedor: {l.vendedor?.nome ?? '-'}</p>
+                    {isAdmin && <p>Cadastrada por: {l.criador?.nome ?? '-'}</p>}
+                    <p>{l.segmento ?? 'Segmento não informado'} · {contatosDaLoja(l.id)} contato(s)</p>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 sm:justify-end">
+                    <StatusBadge value={l.status} />
+                    <Button asChild size="sm" variant="outline">
                     <Link to={`/lojas/${l.id}`}>Detalhes</Link>
                   </Button>
                   <Button
@@ -152,12 +182,13 @@ export function Lojas() {
                   >
                     <MessageCircle className="h-4 w-4" />
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  </div>
+            </div>
           ))}
-        </div>
+          </CardContent>
+        </Card>
       )}
+      {filtered.length > 0 && <ListPagination page={page} pageSize={PAGE_SIZE} total={filtered.length} onPageChange={setPage} itemLabel="lojas" />}
 
       <LojaDialog open={dialogOpen} onOpenChange={setDialogOpen} />
       <WhatsAppDialog

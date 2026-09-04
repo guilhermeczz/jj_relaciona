@@ -1,8 +1,9 @@
 import { Outlet } from 'react-router-dom'
-import { Bell, CalendarDays, LogOut, Package } from 'lucide-react'
+import { LogOut, Package } from 'lucide-react'
 import { Sidebar, MobileNav } from '@/components/layout/Sidebar'
 import { useAuth } from '@/context/AuthContext'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { NotificationCenter } from '@/components/notification-center'
 
 export function AppLayout() {
   const { loading, profile, signOut } = useAuth()
@@ -30,6 +31,7 @@ export function AppLayout() {
             </div>
           </div>
           <div className="flex items-center gap-1">
+            {profile.perfil === 'admin' && <NotificationCenter />}
             <ThemeToggle />
             <button
               onClick={signOut}
@@ -48,14 +50,7 @@ export function AppLayout() {
             <p className="mt-1 text-xs text-muted-foreground">Veja o resumo do relacionamento com as lojas.</p>
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="flex items-center gap-2 rounded-lg px-3 py-2">
-              <CalendarDays className="h-4 w-4" />
-              {new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(new Date())}
-            </div>
-            <button aria-label="Notificações" className="relative flex h-10 w-10 items-center justify-center rounded-xl hover:bg-muted">
-              <Bell className="h-4 w-4" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-accent" />
-            </button>
+            {profile.perfil === 'admin' && <NotificationCenter />}
             <ThemeToggle />
             <span className="h-6 w-px bg-border" />
             <button onClick={signOut} className="flex h-10 items-center gap-2 rounded-xl px-3 font-medium hover:bg-muted hover:text-foreground">

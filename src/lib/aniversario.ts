@@ -38,7 +38,18 @@ export function isThisMonth(a: Aniversariante, ref = new Date()): boolean {
   return a.mes === ref.getMonth() + 1
 }
 
-export type AniversarioFiltro = 'hoje' | '7dias' | '30dias' | 'mes' | 'todos'
+export type AniversarioFiltro = 'hoje' | '7dias' | '30dias' | 'mes' | 'personalizado' | 'todos'
+
+export function isBirthdayWithinRange(a: Aniversariante, inicio: string, fim: string): boolean {
+  if (!inicio && !fim) return true
+  const start = inicio ? new Date(`${inicio}T00:00:00`) : new Date(2000, 0, 1)
+  const end = fim ? new Date(`${fim}T23:59:59`) : new Date(2100, 11, 31, 23, 59, 59)
+  for (let year = start.getFullYear(); year <= end.getFullYear(); year += 1) {
+    const occurrence = new Date(year, a.mes - 1, a.dia, 12)
+    if (occurrence >= start && occurrence <= end) return true
+  }
+  return false
+}
 
 export function filterAniversariantes(
   lista: Aniversariante[],

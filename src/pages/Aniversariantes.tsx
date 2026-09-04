@@ -18,7 +18,9 @@ import { InteracaoDialog } from '@/components/interacao-dialog'
 import { useData } from '@/context/DataContext'
 import { useAuth } from '@/context/AuthContext'
 import { formatDataBR, filterAniversariantes, type Aniversariante, type AniversarioFiltro } from '@/lib/aniversario'
+import { isBirthdayWithinRange } from '@/lib/aniversario'
 import { MSG_LOJA_ANIVERSARIO, MSG_CONTATO_ANIVERSARIO } from '@/lib/whatsapp'
+import { DateRangeFilter } from '@/components/date-range-filter'
 
 export function Aniversariantes() {
   const { lojas, contatos, profiles } = useData()
@@ -27,6 +29,8 @@ export function Aniversariantes() {
   const [fVendedor, setFVendedor] = useState('')
   const [fCidade, setFCidade] = useState('')
   const [fTipo, setFTipo] = useState('')
+  const [dataInicio, setDataInicio] = useState('')
+  const [dataFim, setDataFim] = useState('')
   const [wa, setWa] = useState<{ phone: string; message: string } | null>(null)
   const [brindeTarget, setBrindeTarget] = useState<{ lojaId: string; contatoId?: string } | null>(null)
   const [interacaoTarget, setInteracaoTarget] = useState<{ lojaId: string; contatoId?: string } | null>(null)
@@ -88,7 +92,8 @@ export function Aniversariantes() {
     const matchV = !fVendedor || a.vendedorId === fVendedor
     const matchC = !fCidade || minhasLojas.find((l) => l.id === a.lojaId)?.cidade === fCidade
     const matchT = !fTipo || a.tipo === fTipo
-    return matchV && matchC && matchT
+    const matchDate = filtro !== 'personalizado' || isBirthdayWithinRange(a, dataInicio, dataFim)
+    return matchV && matchC && matchT && matchDate
   })
 
   const lojaCidade = (lojaId?: string) => minhasLojas.find((l) => l.id === lojaId)?.cidade ?? '-'
@@ -107,9 +112,13 @@ export function Aniversariantes() {
             <SelectItem value="7dias">Próximos 7 dias</SelectItem>
             <SelectItem value="30dias">Próximos 30 dias</SelectItem>
             <SelectItem value="mes">Mês atual</SelectItem>
+            <SelectItem value="personalizado">Período personalizado</SelectItem>
             <SelectItem value="todos">Todos</SelectItem>
           </SelectContent>
         </Select>
+        {filtro === 'personalizado' && (
+          <DateRangeFilter inicio={dataInicio} fim={dataFim} onInicioChange={setDataInicio} onFimChange={setDataFim} label="Aniversário" />
+        )}
         {isAdmin && (
           <Select value={fVendedor || 'todos'} onValueChange={(value) => setFVendedor(value === 'todos' ? '' : value)}>
             <SelectTrigger className="sm:w-48">

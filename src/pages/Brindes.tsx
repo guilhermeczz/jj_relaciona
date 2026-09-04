@@ -20,6 +20,10 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { formatDataBR } from '@/lib/aniversario'
 import type { Brinde } from '@/types'
+import { DateRangeFilter } from '@/components/date-range-filter'
+import { comparePtBr, isWithinDateRange } from '@/lib/filters'
+
+const MOTIVOS = ['aniversario_loja', 'aniversario_contato', 'relacionamento', 'outro']
 
 export function Brindes() {
   const { brindes, lojas } = useData()
@@ -27,6 +31,10 @@ export function Brindes() {
   const [params, setParams] = useSearchParams()
   const [fStatus, setFStatus] = useState('')
   const [fVendedor, setFVendedor] = useState('')
+  const [fLoja, setFLoja] = useState('')
+  const [fMotivo, setFMotivo] = useState('')
+  const [dataInicio, setDataInicio] = useState('')
+  const [dataFim, setDataFim] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editando, setEditando] = useState<Brinde | null>(null)
 
@@ -49,7 +57,10 @@ export function Brindes() {
   const filtered = visiveis.filter((b) => {
     const matchS = !fStatus || b.status === fStatus
     const matchV = !fVendedor || b.vendedor?.nome === fVendedor
-    return matchS && matchV
+    const matchL = !fLoja || b.loja_id === fLoja
+    const matchM = !fMotivo || b.motivo === fMotivo
+    const matchDate = isWithinDateRange(b.data_prevista, dataInicio, dataFim)
+    return matchS && matchV && matchL && matchM && matchDate
   })
 
   async function mudarStatus(b: Brinde, novo: string) {
@@ -79,7 +90,7 @@ export function Brindes() {
         }
       />
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <Select value={fStatus || 'todos'} onValueChange={(value) => setFStatus(value === 'todos' ? '' : value)}>
           <SelectTrigger className="sm:w-44">
             <SelectValue placeholder="Status" />
@@ -105,6 +116,15 @@ export function Brindes() {
             ))}
           </SelectContent>
         </Select>}
+        <Select value={fLoja || 'todas'} onValueChange={(value) => setFLoja(value === 'todas' ? '' : value)}>
+          <SelectTrigger className="sm:w-52"><SelectValue placeholder="Loja" /></SelectTrigger>
+          <SelectContent><SelectItem value="todas">Todas as lojas</SelectItem>{[...lojas].sort((a, b) => comparePtBr(a.nome_fantasia, b.nome_fantasia)).map((loja) => <SelectItem key={loja.id} value={loja.id}>{loja.nome_fantasia}</SelectItem>)}</SelectContent>
+        </Select>
+        <Select value={fMotivo || 'todos'} onValueChange={(value) => setFMotivo(value === 'todos' ? '' : value)}>
+          <SelectTrigger className="sm:w-48"><SelectValue placeholder="Motivo" /></SelectTrigger>
+          <SelectContent><SelectItem value="todos">Todos os motivos</SelectItem>{MOTIVOS.map((motivo) => <SelectItem key={motivo} value={motivo}>{motivo.replace('_', ' ')}</SelectItem>)}</SelectContent>
+        </Select>
+        <DateRangeFilter inicio={dataInicio} fim={dataFim} onInicioChange={setDataInicio} onFimChange={setDataFim} label="Previsão" />
       </div>
 
       {filtered.length === 0 ? (

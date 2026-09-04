@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Pencil, MessageCircle, Users, MapPin, Plus, Cake, Gift } from 'lucide-react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { ArrowLeft, Pencil, MessageCircle, Users, MapPin, Plus, Cake, Gift, Power } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -19,6 +19,7 @@ import { toast } from 'sonner'
 
 export function LojaDetalhe() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const { getLoja, getContatosDaLoja, interacoes, brindes, treinamentoParticipantes, treinamentos, loadAll } = useData()
   const { user, isAdmin } = useAuth()
   const [tab, setTab] = useState('dados')
@@ -69,7 +70,8 @@ export function LojaDetalhe() {
     if (error) toast.error(error.message)
     else {
       toast.success(`Loja ${novo === 'ativo' ? 'ativada' : 'inativada'}`)
-      loadAll()
+      await loadAll()
+      navigate(novo === 'ativo' ? '/lojas' : '/lojas?aba=inativas')
     }
   }
 
@@ -107,8 +109,14 @@ export function LojaDetalhe() {
             <MessageCircle className="h-4 w-4" /> WhatsApp
           </Button>
           {isAdmin && (
-            <Button variant="outline" onClick={inativar}>
-              {loja.status === 'ativo' ? 'Inativar' : 'Ativar'}
+            <Button
+              size="icon"
+              variant={loja.status === 'ativo' ? 'destructive' : 'outline'}
+              onClick={inativar}
+              title={loja.status === 'ativo' ? 'Inativar loja' : 'Reativar loja'}
+              aria-label={loja.status === 'ativo' ? 'Inativar loja' : 'Reativar loja'}
+            >
+              <Power className="h-4 w-4" />
             </Button>
           )}
         </div>
