@@ -18,28 +18,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useData } from '@/context/DataContext'
 import { useAuth } from '@/context/AuthContext'
-import { formatDataBR, isNextNDays, type Aniversariante } from '@/lib/aniversario'
+import { formatDataBR, isNextNDays, sortByNextBirthday, type Aniversariante } from '@/lib/aniversario'
 import type { Loja } from '@/types'
 
 const formatNumber = new Intl.NumberFormat('pt-BR')
 
-function MetricCard({ label, value, helper, icon: Icon, dark = false }: {
+function MetricCard({ label, value, helper, icon: Icon }: {
   label: string
   value: string | number
   helper: string
   icon: typeof Store
-  dark?: boolean
 }) {
   return (
-    <Card className={dark ? 'border-transparent bg-brand-black text-white' : 'bg-white'}>
+    <Card className="border-[#e2bd32] bg-[#fff0a8] text-[#2b250f] dark:border-[#75601d] dark:bg-[#4a3e1b] dark:text-[#fff5c2]">
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className={dark ? 'text-xs font-medium text-white/55' : 'text-xs font-medium text-muted-foreground'}>{label}</p>
+            <p className="text-xs font-semibold text-[#71601f] dark:text-[#e8d583]">{label}</p>
             <p className="mt-2 text-2xl font-extrabold tracking-tight sm:text-[28px]">{value}</p>
-            <p className={dark ? 'mt-1 text-[11px] text-white/45' : 'mt-1 text-[11px] text-muted-foreground'}>{helper}</p>
+            <p className="mt-1 text-[11px] text-[#71601f] dark:text-[#d8c77c]">{helper}</p>
           </div>
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-brand-black">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#e5b900] text-[#211c08] shadow-sm dark:bg-accent">
             <Icon className="h-5 w-5" strokeWidth={2.2} />
           </span>
         </div>
@@ -76,11 +75,11 @@ function buildBirthdays(lojas: Loja[], contatos: ReturnType<typeof useData>['con
         tipo: 'contato', nome: contato.nome, data: contato.data_nascimento!,
         mes: date.getMonth() + 1, dia: date.getDate(), contatoId: contato.id,
         lojaId: loja.id, lojaNome: loja.nome_fantasia,
-        telefone: contato.whatsapp,
+        telefone: contato.whatsapp, hobby: contato.hobby,
       })
     })
   })
-  return list.filter((item) => isNextNDays(item)).slice(0, 5)
+  return sortByNextBirthday(list.filter((item) => isNextNDays(item))).slice(0, 5)
 }
 
 function AdminDashboard() {
@@ -89,7 +88,6 @@ function AdminDashboard() {
   const pendingGifts = brindes.filter((gift) => gift.status === 'pendente' || gift.status === 'separado')
   const scheduledTrainings = treinamentos.filter((training) => training.status === 'programado')
   const activeStores = lojas.filter((store) => store.status === 'ativo').length
-  const activeContacts = contatos.filter((contact) => contact.ativo).length
   const activeSellers = profiles.filter((profile) => profile.perfil === 'vendedor' && profile.ativo).length
 
   return (
@@ -102,11 +100,11 @@ function AdminDashboard() {
 
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-3 xl:gap-4">
         <MetricCard label="Lojas" value={formatNumber.format(lojas.length)} helper={`${activeStores} ativas`} icon={Store} />
-        <MetricCard label="Contatos" value={formatNumber.format(contatos.length)} helper={`${activeContacts} ativos`} icon={Users} />
+        <MetricCard label="Contatos" value={formatNumber.format(contatos.length)} helper="Cadastrados no sistema" icon={Users} />
         <MetricCard label="Vendedores" value={formatNumber.format(activeSellers)} helper="Usuários ativos" icon={UserCog} />
         <MetricCard label="Interações" value={formatNumber.format(interacoes.length)} helper="Registros de relacionamento" icon={MessageSquarePlus} />
         <MetricCard label="Brindes" value={formatNumber.format(brindes.length)} helper={`${pendingGifts.length} pendentes`} icon={Gift} />
-        <MetricCard label="Treinamentos" value={formatNumber.format(treinamentos.length)} helper={`${scheduledTrainings.length} programados`} icon={GraduationCap} dark />
+        <MetricCard label="Treinamentos" value={formatNumber.format(treinamentos.length)} helper={`${scheduledTrainings.length} programados`} icon={GraduationCap} />
       </div>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[1.45fr_0.9fr]">

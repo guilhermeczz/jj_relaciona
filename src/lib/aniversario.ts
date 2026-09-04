@@ -8,24 +8,41 @@ export interface Aniversariante {
   lojaNome?: string
   contatoId?: string
   telefone?: string | null
+  hobby?: string | null
   email?: string | null
   vendedorNome?: string
   vendedorId?: string | null
 }
 
-function birthdayThisYear(mes: number, dia: number): Date {
-  const now = new Date()
-  return new Date(now.getFullYear(), mes - 1, dia, 12, 0, 0, 0)
+function birthdayInYear(a: Pick<Aniversariante, 'mes' | 'dia'>, year: number): Date {
+  return new Date(year, a.mes - 1, a.dia, 12, 0, 0, 0)
+}
+
+export function nextBirthday(a: Aniversariante, ref = new Date()): Date {
+  const today = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate(), 12, 0, 0, 0)
+  let occurrence = birthdayInYear(a, ref.getFullYear())
+  if (occurrence < today) occurrence = birthdayInYear(a, ref.getFullYear() + 1)
+  return occurrence
+}
+
+export function birthdayAge(a: Aniversariante, ref = new Date()): number {
+  const originalYear = Number(a.data.slice(0, 4))
+  if (!Number.isFinite(originalYear)) return 0
+  return Math.max(0, nextBirthday(a, ref).getFullYear() - originalYear)
+}
+
+export function formatBirthdayOccurrence(a: Aniversariante, ref = new Date()): string {
+  return nextBirthday(a, ref).toLocaleDateString('pt-BR')
 }
 
 export function isToday(a: Aniversariante, ref = new Date()): boolean {
-  const d = birthdayThisYear(a.mes, a.dia)
+  const d = birthdayInYear(a, ref.getFullYear())
   return d.getDate() === ref.getDate() && d.getMonth() === ref.getMonth()
 }
 
 export function isNextNDays(a: Aniversariante, ref = new Date(), days = 7): boolean {
   const today = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate(), 12, 0, 0, 0)
-  const target = birthdayThisYear(a.mes, a.dia)
+  const target = nextBirthday(a, ref)
   const diffDays = Math.floor((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
   return diffDays >= 0 && diffDays <= days
 }
@@ -70,8 +87,12 @@ export function filterAniversariantes(
   }
 }
 
+export function sortByNextBirthday(lista: Aniversariante[], ref = new Date()): Aniversariante[] {
+  return [...lista].sort((a, b) => nextBirthday(a, ref).getTime() - nextBirthday(b, ref).getTime())
+}
+
 export function formatDataBR(data?: string | null): string {
   if (!data) return '-'
-  const d = new Date(data)
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(data) ? new Date(`${data}T12:00:00`) : new Date(data)
   return d.toLocaleDateString('pt-BR')
 }

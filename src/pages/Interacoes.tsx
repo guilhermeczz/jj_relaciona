@@ -18,6 +18,7 @@ import { useAuth } from '@/context/AuthContext'
 import { formatDataBR } from '@/lib/aniversario'
 import { exportCSV } from '@/lib/csv'
 import { DateRangeFilter } from '@/components/date-range-filter'
+import { FilterField } from '@/components/filter-field'
 import { comparePtBr, isWithinDateRange } from '@/lib/filters'
 
 export function Interacoes() {
@@ -81,17 +82,16 @@ export function Interacoes() {
         }
       />
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        <div className="relative flex-1 sm:min-w-64">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+        <FilterField label="Pesquisa" className="flex-1 sm:min-w-64">
           <Input
-            placeholder="Pesquisar por loja, contato ou descrição..."
+            placeholder="Loja, contato ou descrição..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-        </div>
-        <Select value={fTipo || 'todos'} onValueChange={(value) => setFTipo(value === 'todos' ? '' : value)}>
-          <SelectTrigger className="sm:w-44">
-            <SelectValue placeholder="Tipo" />
+        </FilterField>
+        <FilterField label="Tipo"><Select value={fTipo || 'todos'} onValueChange={(value) => setFTipo(value === 'todos' ? '' : value)}>
+          <SelectTrigger className="sm:w-44"><SelectValue placeholder="Todos" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos</SelectItem>
@@ -101,16 +101,16 @@ export function Interacoes() {
               </SelectItem>
             ))}
           </SelectContent>
-        </Select>
-        <Select value={fLoja || 'todas'} onValueChange={(value) => setFLoja(value === 'todas' ? '' : value)}>
-          <SelectTrigger className="sm:w-52"><SelectValue placeholder="Loja" /></SelectTrigger>
+        </Select></FilterField>
+        <FilterField label="Loja"><Select value={fLoja || 'todas'} onValueChange={(value) => setFLoja(value === 'todas' ? '' : value)}>
+          <SelectTrigger className="sm:w-52"><SelectValue placeholder="Todas" /></SelectTrigger>
           <SelectContent><SelectItem value="todas">Todas as lojas</SelectItem>{[...minhasLojas].sort((a, b) => comparePtBr(a.nome_fantasia, b.nome_fantasia)).map((loja) => <SelectItem key={loja.id} value={loja.id}>{loja.nome_fantasia}</SelectItem>)}</SelectContent>
-        </Select>
+        </Select></FilterField>
         {isAdmin && (
-          <Select value={fResponsavel || 'todos'} onValueChange={(value) => setFResponsavel(value === 'todos' ? '' : value)}>
-            <SelectTrigger className="sm:w-48"><SelectValue placeholder="Responsável" /></SelectTrigger>
+          <FilterField label="Responsável"><Select value={fResponsavel || 'todos'} onValueChange={(value) => setFResponsavel(value === 'todos' ? '' : value)}>
+            <SelectTrigger className="sm:w-48"><SelectValue placeholder="Todos" /></SelectTrigger>
             <SelectContent><SelectItem value="todos">Todos</SelectItem>{profiles.map((profile) => <SelectItem key={profile.id} value={profile.id}>{profile.nome}</SelectItem>)}</SelectContent>
-          </Select>
+          </Select></FilterField>
         )}
         <DateRangeFilter inicio={dataInicio} fim={dataFim} onInicioChange={setDataInicio} onFimChange={setDataFim} label="Interação" />
       </div>

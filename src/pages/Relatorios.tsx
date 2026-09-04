@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Download, BarChart3 } from 'lucide-react'
+import { Download, BarChart3, FileText } from 'lucide-react'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -9,6 +9,7 @@ import { useData } from '@/context/DataContext'
 import { useAuth } from '@/context/AuthContext'
 import { formatDataBR, isThisMonth, type Aniversariante } from '@/lib/aniversario'
 import { exportCSV } from '@/lib/csv'
+import { exportPDF } from '@/lib/pdf'
 
 export function Relatorios() {
   const { lojas, contatos, treinamentos, treinamentoParticipantes, brindes, profiles } = useData()
@@ -27,12 +28,12 @@ export function Relatorios() {
     const out: Aniversariante[] = []
     for (const l of minhasLojas) {
       if (l.data_fundacao) {
-        const d = new Date(l.data_fundacao)
+        const d = new Date(`${l.data_fundacao}T12:00:00`)
         if (isThisMonth({ mes: d.getMonth() + 1, dia: d.getDate() } as Aniversariante))
           out.push({ tipo: 'loja', nome: l.nome_fantasia, data: l.data_fundacao, mes: d.getMonth() + 1, dia: d.getDate(), lojaNome: l.nome_fantasia, lojaId: l.id })
       }
       for (const c of visiveisContatos.filter((c) => c.loja_id === l.id && c.data_nascimento)) {
-        const d = new Date(c.data_nascimento!)
+        const d = new Date(`${c.data_nascimento!}T12:00:00`)
         if (isThisMonth({ mes: d.getMonth() + 1, dia: d.getDate() } as Aniversariante))
           out.push({ tipo: 'contato', nome: c.nome, data: c.data_nascimento!, mes: d.getMonth() + 1, dia: d.getDate(), lojaId: l.id, lojaNome: l.nome_fantasia, contatoId: c.id })
       }
@@ -165,10 +166,10 @@ export function Relatorios() {
 
   return (
     <div>
-      <PageHeader title="Relatórios" description="Visões gerenciais e exportação em CSV." />
+      <PageHeader title="Relatórios" description="Visões gerenciais com exportação em CSV e PDF A4." />
 
       <Tabs defaultValue="lojas-vendedor" className="mt-2">
-        <TabsList className="flex h-auto flex-wrap justify-start rounded-lg">
+        <TabsList className="flex h-auto w-full justify-start">
           {relatorios.map((r) => (
             <TabsTrigger key={r.key} value={r.key}>
               {r.label}
@@ -199,11 +200,16 @@ function ReportCard({ title, rows, filename }: { title: string; rows: Record<str
   return (
     <Card className="bg-white">
       <CardContent className="p-0">
-        <div className="flex items-center justify-between border-b p-4">
+        <div className="flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="font-semibold text-brand-black">{title}</h3>
-          <Button size="sm" variant="outline" onClick={() => exportCSV(rows, filename)}>
-            <Download className="h-4 w-4" /> Exportar CSV
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => exportCSV(rows, filename)}>
+              <Download className="h-4 w-4" /> Exportar CSV
+            </Button>
+            <Button size="sm" variant="accent" onClick={() => exportPDF(rows, title, filename)}>
+              <FileText className="h-4 w-4" /> Exportar PDF
+            </Button>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

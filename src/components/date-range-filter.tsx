@@ -10,14 +10,14 @@ interface Props {
 
 export function DateRangeFilter({ inicio, fim, onInicioChange, onFimChange, label = 'Período' }: Props) {
   return (
-    <div className="flex min-w-0 flex-1 flex-wrap items-end gap-2 sm:flex-none">
-      <label className="min-w-[138px] flex-1 space-y-1 text-[11px] font-medium text-muted-foreground sm:flex-none">
-        {label} — de
-        <Input type="date" value={inicio} onChange={(event) => onInicioChange(event.target.value)} className="mt-1 sm:w-[150px]" />
+    <div className="grid min-w-0 grid-cols-2 items-end gap-2 sm:flex-none">
+      <label className="min-w-0 text-[11px] font-medium text-muted-foreground">
+        <span className="mb-1 block h-4 leading-4">{label} — de</span>
+        <Input type="date" value={inicio} onChange={(event) => onInicioChange(event.target.value)} className="sm:w-[150px]" />
       </label>
-      <label className="min-w-[138px] flex-1 space-y-1 text-[11px] font-medium text-muted-foreground sm:flex-none">
-        até
-        <Input type="date" value={fim} min={inicio || undefined} onChange={(event) => onFimChange(event.target.value)} className="mt-1 sm:w-[150px]" />
+      <label className="min-w-0 text-[11px] font-medium text-muted-foreground">
+        <span className="mb-1 block h-4 leading-4">Até</span>
+        <Input type="date" value={fim} min={inicio || undefined} onChange={(event) => onFimChange(event.target.value)} className="sm:w-[150px]" />
       </label>
     </div>
   )

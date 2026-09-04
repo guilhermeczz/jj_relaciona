@@ -27,23 +27,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthContextValue['user']>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [authReady, setAuthReady] = useState(false)
 
   useEffect(() => {
+    let active = true
     supabase.auth.getSession().then(({ data }) => {
+      if (!active) return
       const nextUser = authUser(data.session?.user)
       setUser((current) => sameUser(current, nextUser) ? current : nextUser)
+      setAuthReady(true)
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       const nextUser = authUser(session?.user)
       // TOKEN_REFRESHED tambem passa por aqui. Manter a mesma referencia evita
       // desmontar a tela e perder seu estado quando a aba volta do segundo plano.
       setUser((current) => sameUser(current, nextUser) ? current : nextUser)
+      setAuthReady(true)
     })
-    return () => sub.subscription.unsubscribe()
+    return () => {
+      active = false
+      sub.subscription.unsubscribe()
+    }
   }, [])
 
   useEffect(() => {
     async function loadProfile() {
+      if (!authReady) return
       setLoading(true)
       if (!user) {
         setProfile(null)
@@ -56,8 +65,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', user.id)
         .single()
       const loadedProfile = (data as Profile) ?? null
-      if (error || !loadedProfile?.ativo) {
+      if (loadedProfile && !loadedProfile.ativo) {
         await supabase.auth.signOut()
+        setProfile(null)
+        setLoading(false)
+        return
+      }
+      if (error || !loadedProfile) {
         setProfile(null)
         setLoading(false)
         return
@@ -66,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     }
     loadProfile()
-  }, [user?.id])
+  }, [authReady, user?.id])
 
   async function signIn(username: string, password: string) {
     const normalizedUsername = username.trim().toLowerCase().replace(/\s+/g, '')

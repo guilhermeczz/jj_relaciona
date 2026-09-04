@@ -20,7 +20,7 @@ export function AppLayout() {
     <div className="flex min-h-screen bg-brand-gray">
       <Sidebar />
       <div className="flex min-h-screen w-full min-w-0 flex-col pb-[76px] md:pb-0">
-        <header className="safe-top sticky top-0 z-30 flex min-h-16 items-center justify-between border-b bg-white/95 px-4 backdrop-blur dark:bg-card/95 md:hidden">
+        <header className="safe-top sticky top-0 z-30 flex min-h-16 items-center justify-between border-b bg-card/95 px-4 backdrop-blur md:hidden">
           <div className="flex min-w-0 items-center gap-2.5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-brand-black">
               <Package className="h-5 w-5" strokeWidth={2.5} />
@@ -42,7 +42,7 @@ export function AppLayout() {
             </button>
           </div>
         </header>
-        <header className="sticky top-0 z-30 hidden h-[82px] items-center justify-between border-b bg-white/95 px-6 backdrop-blur dark:bg-card/95 lg:flex lg:px-8">
+        <header className="sticky top-0 z-30 hidden h-[82px] items-center justify-between border-b bg-card/95 px-6 backdrop-blur lg:flex lg:px-8">
           <div>
             <p className="text-base font-bold text-brand-black">
               Olá, {profile.nome.split(' ')[0]}! <span aria-hidden="true">👋</span>

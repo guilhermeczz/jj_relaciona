@@ -21,6 +21,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useData } from '@/context/DataContext'
 import type { Profile } from '@/types'
+import { formatBrazilPhone } from '@/lib/input-format'
 
 interface Props {
   open: boolean
@@ -141,7 +142,7 @@ export function PerfilDialog({ open, onOpenChange, perfil }: Props) {
           </div>
           <div className="space-y-1.5">
             <Label>Telefone</Label>
-            <Input value={form.telefone} onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))} />
+            <Input type="tel" inputMode="numeric" maxLength={15} value={form.telefone} onChange={(e) => setForm((f) => ({ ...f, telefone: formatBrazilPhone(e.target.value) }))} placeholder="(00) 00000-0000" />
           </div>
           {perfil && (
             <div className="space-y-1.5">

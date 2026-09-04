@@ -23,6 +23,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useData } from '@/context/DataContext'
 import type { Contato, Loja } from '@/types'
+import { formatBrazilPhone } from '@/lib/input-format'
 
 export const CARGOS = [
   'proprietario',
@@ -45,7 +46,6 @@ const EMPTY_FORM = {
   recebe_mensagens: false,
   recebe_treinamentos: false,
   observacoes: '',
-  ativo: true,
 }
 
 interface Props {
@@ -74,7 +74,6 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
           recebe_mensagens: contato.recebe_mensagens,
           recebe_treinamentos: contato.recebe_treinamentos,
           observacoes: contato.observacoes ?? '',
-          ativo: contato.ativo,
         })
       } else {
         setForm({
@@ -125,7 +124,7 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
       recebe_mensagens: form.recebe_mensagens,
       recebe_treinamentos: form.recebe_treinamentos,
       observacoes: form.observacoes || null,
-      ativo: form.ativo,
+      ativo: true,
     }
     const { error } = contato
       ? await supabase.from('contatos_loja').update(payload).eq('id', contato.id)
@@ -188,7 +187,7 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="contato-whatsapp">WhatsApp *</Label>
-            <Input id="contato-whatsapp" required value={form.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} placeholder="(00) 00000-0000" />
+            <Input id="contato-whatsapp" required type="tel" inputMode="numeric" maxLength={15} value={form.whatsapp} onChange={(e) => set('whatsapp', formatBrazilPhone(e.target.value))} placeholder="(00) 00000-0000" />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="contato-hobby">Hobby *</Label>
@@ -223,20 +222,6 @@ export function ContatoDialog({ open, onOpenChange, lojaId, contato }: Props) {
             <Label>Observações</Label>
             <Textarea value={form.observacoes} onChange={(e) => set('observacoes', e.target.value)} rows={2} />
           </div>
-          {contato && (
-            <div className="space-y-1.5">
-              <Label>Status</Label>
-              <Select value={form.ativo ? 'ativo' : 'inativo'} onValueChange={(v) => set('ativo', v === 'ativo')}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ativo">Ativo</SelectItem>
-                  <SelectItem value="inativo">Inativo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
         </div>
         <p className="text-xs text-muted-foreground">
           * Campos obrigatórios. Utilize os dados cadastrados apenas para relacionamento comercial autorizado

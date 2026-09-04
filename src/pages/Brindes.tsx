@@ -22,11 +22,21 @@ import { formatDataBR } from '@/lib/aniversario'
 import type { Brinde } from '@/types'
 import { DateRangeFilter } from '@/components/date-range-filter'
 import { comparePtBr, isWithinDateRange } from '@/lib/filters'
+import { FilterField } from '@/components/filter-field'
 
-const MOTIVOS = ['aniversario_loja', 'aniversario_contato', 'relacionamento', 'outro']
+const MOTIVOS = [
+  { value: 'aniversario_loja', label: 'Aniversário da loja' },
+  { value: 'aniversario_contato', label: 'Aniversário do contato' },
+  { value: 'relacionamento', label: 'Relacionamento' },
+  { value: 'outro', label: 'Outro' },
+]
+
+function nomeMotivo(value?: string | null) {
+  return MOTIVOS.find((motivo) => motivo.value === value)?.label ?? value ?? 'Motivo não informado'
+}
 
 export function Brindes() {
-  const { brindes, lojas } = useData()
+  const { brindes, lojas, loadAll } = useData()
   const { user, isAdmin } = useAuth()
   const [params, setParams] = useSearchParams()
   const [fStatus, setFStatus] = useState('')
@@ -59,7 +69,7 @@ export function Brindes() {
     const matchV = !fVendedor || b.vendedor?.nome === fVendedor
     const matchL = !fLoja || b.loja_id === fLoja
     const matchM = !fMotivo || b.motivo === fMotivo
-    const matchDate = isWithinDateRange(b.data_prevista, dataInicio, dataFim)
+    const matchDate = isWithinDateRange(b.created_at, dataInicio, dataFim)
     return matchS && matchV && matchL && matchM && matchDate
   })
 
@@ -68,7 +78,10 @@ export function Brindes() {
     if (novo === 'enviado') payload.data_envio = new Date().toISOString().slice(0, 10)
     const { error } = await supabase.from('brindes').update(payload).eq('id', b.id)
     if (error) toast.error(error.message)
-    else toast.success('Status atualizado')
+    else {
+      toast.success('Status atualizado.')
+      await loadAll()
+    }
   }
 
   return (
@@ -90,10 +103,10 @@ export function Brindes() {
         }
       />
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        <Select value={fStatus || 'todos'} onValueChange={(value) => setFStatus(value === 'todos' ? '' : value)}>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+        <FilterField label="Status"><Select value={fStatus || 'todos'} onValueChange={(value) => setFStatus(value === 'todos' ? '' : value)}>
           <SelectTrigger className="sm:w-44">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder="Todos" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos</SelectItem>
@@ -102,10 +115,10 @@ export function Brindes() {
             <SelectItem value="enviado">Enviado</SelectItem>
             <SelectItem value="cancelado">Cancelado</SelectItem>
           </SelectContent>
-        </Select>
-        {isAdmin && <Select value={fVendedor || 'todos'} onValueChange={(value) => setFVendedor(value === 'todos' ? '' : value)}>
+        </Select></FilterField>
+        {isAdmin && <FilterField label="Vendedor"><Select value={fVendedor || 'todos'} onValueChange={(value) => setFVendedor(value === 'todos' ? '' : value)}>
           <SelectTrigger className="sm:w-48">
-            <SelectValue placeholder="Vendedor" />
+            <SelectValue placeholder="Todos" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos</SelectItem>
@@ -115,56 +128,56 @@ export function Brindes() {
               </SelectItem>
             ))}
           </SelectContent>
-        </Select>}
-        <Select value={fLoja || 'todas'} onValueChange={(value) => setFLoja(value === 'todas' ? '' : value)}>
-          <SelectTrigger className="sm:w-52"><SelectValue placeholder="Loja" /></SelectTrigger>
+        </Select></FilterField>}
+        <FilterField label="Loja"><Select value={fLoja || 'todas'} onValueChange={(value) => setFLoja(value === 'todas' ? '' : value)}>
+          <SelectTrigger className="sm:w-52"><SelectValue placeholder="Todas" /></SelectTrigger>
           <SelectContent><SelectItem value="todas">Todas as lojas</SelectItem>{[...lojas].sort((a, b) => comparePtBr(a.nome_fantasia, b.nome_fantasia)).map((loja) => <SelectItem key={loja.id} value={loja.id}>{loja.nome_fantasia}</SelectItem>)}</SelectContent>
-        </Select>
-        <Select value={fMotivo || 'todos'} onValueChange={(value) => setFMotivo(value === 'todos' ? '' : value)}>
-          <SelectTrigger className="sm:w-48"><SelectValue placeholder="Motivo" /></SelectTrigger>
-          <SelectContent><SelectItem value="todos">Todos os motivos</SelectItem>{MOTIVOS.map((motivo) => <SelectItem key={motivo} value={motivo}>{motivo.replace('_', ' ')}</SelectItem>)}</SelectContent>
-        </Select>
-        <DateRangeFilter inicio={dataInicio} fim={dataFim} onInicioChange={setDataInicio} onFimChange={setDataFim} label="Previsão" />
+        </Select></FilterField>
+        <FilterField label="Motivo"><Select value={fMotivo || 'todos'} onValueChange={(value) => setFMotivo(value === 'todos' ? '' : value)}>
+          <SelectTrigger className="sm:w-48"><SelectValue placeholder="Todos" /></SelectTrigger>
+          <SelectContent><SelectItem value="todos">Todos os motivos</SelectItem>{MOTIVOS.map((motivo) => <SelectItem key={motivo.value} value={motivo.value}>{motivo.label}</SelectItem>)}</SelectContent>
+        </Select></FilterField>
+        <DateRangeFilter inicio={dataInicio} fim={dataFim} onInicioChange={setDataInicio} onFimChange={setDataFim} label="Cadastro" />
       </div>
 
       {filtered.length === 0 ? (
         <EmptyState icon={<Gift className="h-8 w-8" />} title="Nenhum brinde encontrado" />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <Card className="overflow-hidden bg-white">
+          <CardContent className="divide-y p-0">
           {filtered.map((b) => (
-            <Card key={b.id} className="bg-white">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-2">
+            <div key={b.id} className="grid gap-3 p-4 transition-colors hover:bg-muted/40 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,0.8fr)_auto] sm:items-center">
                   <div className="min-w-0">
                     <p className="font-semibold text-brand-black">{b.descricao}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="truncate text-xs leading-5 text-muted-foreground">
                       {b.loja?.nome_fantasia}
                       {b.contato ? ` · ${b.contato.nome}` : ''}
                     </p>
                   </div>
+                  <div className="min-w-0 text-xs leading-5 text-muted-foreground">
+                    <p>{nomeMotivo(b.motivo)}</p>
+                    <p>Cadastro: {formatDataBR(b.created_at)}</p>
+                    <p>Previsão: {formatDataBR(b.data_prevista)}</p>
+                  </div>
+                  <div className="min-w-0 text-xs leading-5 text-muted-foreground">
+                    <p>Vendedor: {b.vendedor?.nome ?? '-'}</p>
+                    {b.contato && <p className="truncate">Hobby: {b.contato.hobby ?? '-'}</p>}
+                  </div>
+                <div className="flex items-center justify-end gap-2">
                   <StatusBadge value={b.status} />
-                </div>
-                <p className="mt-2 text-xs capitalize text-muted-foreground">
-                  {b.motivo?.replace('_', ' ')} · prev. {formatDataBR(b.data_prevista)}
-                </p>
-                <p className="text-xs text-muted-foreground">Vendedor: {b.vendedor?.nome ?? '-'}</p>
-                {b.contato && (
-                  <p className="text-xs text-muted-foreground">Hobby: {b.contato.hobby ?? '-'}</p>
-                )}
-                <div className="mt-3 flex gap-2">
                   {b.status !== 'enviado' && b.status !== 'cancelado' && (
-                    <Button size="sm" variant="outline" className="flex-1" onClick={() => mudarStatus(b, 'enviado')}>
+                    <Button size="sm" variant="outline" onClick={() => mudarStatus(b, 'enviado')}>
                       Marcar enviado
                     </Button>
                   )}
-                  <Button size="sm" variant="ghost" onClick={() => setEditando(b)}>
+                  <Button size="icon" variant="ghost" title="Editar brinde" aria-label={`Editar ${b.descricao}`} onClick={() => setEditando(b)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+            </div>
           ))}
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       <BrindeDialog

@@ -69,7 +69,7 @@ export function Sidebar() {
   const links = profile?.perfil === 'admin' ? nav : nav.filter((n) => !n.adminOnly)
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-[258px] shrink-0 flex-col bg-[#121212] text-white md:flex">
+    <aside className="sticky top-0 hidden h-screen w-[258px] shrink-0 flex-col bg-[#292823] text-white md:flex">
       <div className="px-6 pb-7 pt-6">
         <Brand />
       </div>
@@ -126,7 +126,7 @@ export function MobileNav() {
   const links = isAdmin ? adminMobile : sellerMobile
 
   return (
-    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-black/10 bg-white/95 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#151619]/95 md:hidden">
+    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-black/10 bg-card/95 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl dark:border-white/10 md:hidden">
       {links.map(({ to, label, icon: Icon }) => (
         <NavLink
           key={to}

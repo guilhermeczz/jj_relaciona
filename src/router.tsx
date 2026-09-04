@@ -58,6 +58,13 @@ function Protected() {
   return <AppLayout />
 }
 
+function PublicOnly() {
+  const { user, loading } = useAuth()
+  if (loading) return null
+  if (user) return <Navigate to="/dashboard" replace />
+  return <Outlet />
+}
+
 function AdminOnly() {
   const { isAdmin } = useAuth()
   if (!isAdmin) return <Navigate to="/dashboard" replace />
@@ -69,7 +76,10 @@ export const router = createBrowserRouter([
     element: <Providers />,
     errorElement: <RouteError />,
     children: [
-      { path: '/login', element: <Login /> },
+      {
+        element: <PublicOnly />,
+        children: [{ path: '/login', element: <Login /> }],
+      },
       {
         element: <Protected />,
         children: [

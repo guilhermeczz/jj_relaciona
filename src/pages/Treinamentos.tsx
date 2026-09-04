@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DateRangeFilter } from '@/components/date-range-filter'
 import { isWithinDateRange } from '@/lib/filters'
+import { FilterField } from '@/components/filter-field'
 
 export function Treinamentos() {
   const { treinamentos, treinamentoParticipantes } = useData()
@@ -52,15 +53,17 @@ export function Treinamentos() {
         ) : undefined}
       />
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        <div className="relative flex-1 sm:min-w-64">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar nome, tema ou parceiro..." />
-        </div>
-        <Select value={fStatus || 'todos'} onValueChange={(value) => setFStatus(value === 'todos' ? '' : value)}>
-          <SelectTrigger className="sm:w-44"><SelectValue placeholder="Status" /></SelectTrigger>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+        <FilterField label="Pesquisa" className="flex-1 sm:min-w-64">
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center" aria-hidden="true"><Search className="h-4 w-4 text-muted-foreground" /></span>
+            <Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nome, tema ou parceiro..." />
+          </div>
+        </FilterField>
+        <FilterField label="Status"><Select value={fStatus || 'todos'} onValueChange={(value) => setFStatus(value === 'todos' ? '' : value)}>
+          <SelectTrigger className="sm:w-44"><SelectValue placeholder="Todos" /></SelectTrigger>
           <SelectContent><SelectItem value="todos">Todos</SelectItem><SelectItem value="programado">Programado</SelectItem><SelectItem value="realizado">Realizado</SelectItem><SelectItem value="cancelado">Cancelado</SelectItem></SelectContent>
-        </Select>
+        </Select></FilterField>
         <DateRangeFilter inicio={dataInicio} fim={dataFim} onInicioChange={setDataInicio} onFimChange={setDataFim} label="Treinamento" />
       </div>
 

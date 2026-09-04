@@ -25,6 +25,7 @@ import { useData } from '@/context/DataContext'
 import { useAuth } from '@/context/AuthContext'
 import type { Loja } from '@/types'
 import { fetchAddressByCep, formatCep, onlyCepDigits } from '@/lib/cep'
+import { formatBrazilPhone } from '@/lib/input-format'
 
 const ESTADOS = [
   'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO',
@@ -244,11 +245,11 @@ export function LojaDialog({ open, onOpenChange, loja }: Props) {
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <Label>WhatsApp</Label>
-            <Input value={form.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} placeholder="(00) 00000-0000" />
+            <Input type="tel" inputMode="numeric" maxLength={15} value={form.whatsapp} onChange={(e) => set('whatsapp', formatBrazilPhone(e.target.value))} placeholder="(00) 00000-0000" />
           </div>
           <div className="space-y-1.5">
             <Label>Telefone</Label>
-            <Input value={form.telefone} onChange={(e) => set('telefone', e.target.value)} />
+            <Input type="tel" inputMode="numeric" maxLength={15} value={form.telefone} onChange={(e) => set('telefone', formatBrazilPhone(e.target.value))} placeholder="(00) 0000-0000" />
           </div>
           <div className="space-y-1.5">
             <Label>E-mail</Label>

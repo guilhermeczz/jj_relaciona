@@ -6,6 +6,14 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undef
 export const supabase = createClient(
   supabaseUrl || 'http://localhost:54321',
   supabaseAnonKey || 'public-anon-key-placeholder',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storage: window.localStorage,
+    },
+  },
 )
 
 export function isSupabaseConfigured(): boolean {

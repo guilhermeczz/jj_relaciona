@@ -123,7 +123,7 @@ export function LojaDetalhe() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab} className="mt-6">
-        <TabsList className="flex-wrap h-auto w-full justify-start rounded-lg">
+        <TabsList className="h-auto w-full justify-start">
           <TabsTrigger value="dados">Dados da loja</TabsTrigger>
           <TabsTrigger value="contatos">Contatos ({lojaContatos.length})</TabsTrigger>
           <TabsTrigger value="interacoes">Interações</TabsTrigger>

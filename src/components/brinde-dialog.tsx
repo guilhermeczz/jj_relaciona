@@ -24,8 +24,18 @@ import { useData } from '@/context/DataContext'
 import { useAuth } from '@/context/AuthContext'
 import type { Brinde, Loja } from '@/types'
 
-const MOTIVOS = ['aniversario_loja', 'aniversario_contato', 'relacionamento', 'outro']
-const STATUS = ['pendente', 'separado', 'enviado', 'cancelado']
+const MOTIVOS = [
+  { value: 'aniversario_loja', label: 'Aniversário da loja' },
+  { value: 'aniversario_contato', label: 'Aniversário do contato' },
+  { value: 'relacionamento', label: 'Relacionamento' },
+  { value: 'outro', label: 'Outro' },
+]
+const STATUS = [
+  { value: 'pendente', label: 'Pendente' },
+  { value: 'separado', label: 'Separado' },
+  { value: 'enviado', label: 'Enviado' },
+  { value: 'cancelado', label: 'Cancelado' },
+]
 
 interface Props {
   open: boolean
@@ -40,7 +50,7 @@ export function BrindeDialog({ open, onOpenChange, lojaId, contatoId, brinde }: 
   const { user, isAdmin } = useAuth()
   const [loja, setLoja] = useState(lojaId ?? '')
   const [contato, setContato] = useState(contatoId ?? '')
-  const [motivo, setMotivo] = useState('relacionamento')
+  const [motivo, setMotivo] = useState('')
   const [descricao, setDescricao] = useState('')
   const [status, setStatus] = useState('pendente')
   const [dataPrevista, setDataPrevista] = useState('')
@@ -53,7 +63,7 @@ export function BrindeDialog({ open, onOpenChange, lojaId, contatoId, brinde }: 
       if (brinde) {
         setLoja(brinde.loja_id)
         setContato(brinde.contato_id ?? '')
-        setMotivo(brinde.motivo ?? 'relacionamento')
+        setMotivo(brinde.motivo ?? '')
         setDescricao(brinde.descricao ?? '')
         setStatus(brinde.status)
         setDataPrevista(brinde.data_prevista ?? '')
@@ -62,7 +72,7 @@ export function BrindeDialog({ open, onOpenChange, lojaId, contatoId, brinde }: 
       } else {
         setLoja(lojaId ?? lojas[0]?.id ?? '')
         setContato(contatoId ?? '')
-        setMotivo('relacionamento')
+        setMotivo('')
         setDescricao('')
         setStatus('pendente')
         setDataPrevista('')
@@ -76,8 +86,16 @@ export function BrindeDialog({ open, onOpenChange, lojaId, contatoId, brinde }: 
   const contatoSelecionado = contatosDaLoja.find((item) => item.id === contato)
 
   async function handleSubmit() {
-    if (!loja || !descricao.trim()) {
-      toast.error('Informe a loja e a descrição do brinde')
+    if (!loja) {
+      toast.error('Selecione a loja.')
+      return
+    }
+    if (!motivo) {
+      toast.error('Selecione o motivo do brinde.')
+      return
+    }
+    if (!descricao.trim()) {
+      toast.error('Informe a descrição do brinde.')
       return
     }
     setSaving(true)
@@ -114,7 +132,7 @@ export function BrindeDialog({ open, onOpenChange, lojaId, contatoId, brinde }: 
         </DialogHeader>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label>Loja</Label>
+            <Label>Loja *</Label>
             <Select value={loja} onValueChange={(value) => { setLoja(value); setContato('') }}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a loja" />
@@ -150,15 +168,15 @@ export function BrindeDialog({ open, onOpenChange, lojaId, contatoId, brinde }: 
             )}
           </div>
           <div className="space-y-1.5">
-            <Label>Motivo</Label>
+            <Label>Motivo *</Label>
             <Select value={motivo} onValueChange={setMotivo}>
-              <SelectTrigger>
-                <SelectValue />
+              <SelectTrigger aria-required="true">
+                <SelectValue placeholder="Selecione o motivo" />
               </SelectTrigger>
               <SelectContent>
                 {MOTIVOS.map((m) => (
-                  <SelectItem key={m} value={m}>
-                    {m.replace('_', ' ')}
+                  <SelectItem key={m.value} value={m.value}>
+                    {m.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -172,8 +190,8 @@ export function BrindeDialog({ open, onOpenChange, lojaId, contatoId, brinde }: 
               </SelectTrigger>
               <SelectContent>
                 {STATUS.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -188,8 +206,8 @@ export function BrindeDialog({ open, onOpenChange, lojaId, contatoId, brinde }: 
             <Input type="date" value={dataEnvio} onChange={(e) => setDataEnvio(e.target.value)} />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Descrição do brinde</Label>
-            <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Ex: Caneca personalizada" />
+            <Label>Descrição do brinde *</Label>
+            <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Ex.: caneca personalizada" required />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <Label>Observações</Label>

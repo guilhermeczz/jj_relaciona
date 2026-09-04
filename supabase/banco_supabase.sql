@@ -56,7 +56,7 @@ create table if not exists public.contatos_loja (
   recebe_mensagens boolean not null default false check (recebe_mensagens),
   recebe_treinamentos boolean not null default false check (recebe_treinamentos),
   observacoes text,
-  ativo boolean not null default true,
+  ativo boolean not null default true constraint contatos_loja_ativo_sempre_true check (ativo = true),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -450,7 +450,10 @@ create policy contatos_update on public.contatos_loja for update to authenticate
   ))) with check (public.is_admin() or (public.is_active_user() and exists (
     select 1 from public.lojas where lojas.id = contatos_loja.loja_id and lojas.criado_por = auth.uid()
   )));
-create policy contatos_delete on public.contatos_loja for delete to authenticated using (public.is_admin());
+create policy contatos_delete on public.contatos_loja for delete to authenticated
+  using (public.is_admin() or (public.is_active_user() and exists (
+    select 1 from public.lojas where lojas.id = contatos_loja.loja_id and lojas.criado_por = auth.uid()
+  )));
 
 -- O vendedor vê e contabiliza somente as próprias interações.
 create policy interacoes_select on public.interacoes for select to authenticated

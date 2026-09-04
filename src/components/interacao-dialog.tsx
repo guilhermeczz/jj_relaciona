@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -23,7 +23,7 @@ import { supabase } from '@/lib/supabase'
 import { useData } from '@/context/DataContext'
 import type { Interacao } from '@/types'
 
-const TIPOS = ['WhatsApp', 'Ligação', 'Visita', 'Brinde', 'Treinamento', 'Observação']
+const TIPOS = ['WhatsApp', 'Ligação', 'Visita', 'Treinamento', 'Observação']
 
 export function InteracaoDialog({
   open,
@@ -47,9 +47,17 @@ export function InteracaoDialog({
   const [selectedContato, setSelectedContato] = useState(contatoId ?? '')
   const [saving, setSaving] = useState(false)
 
+  useEffect(() => {
+    if (!open) return
+    setTipo(contatoId ? 'WhatsApp' : 'Observação')
+    setDescricao('')
+    setData(new Date().toISOString().slice(0, 10))
+    setSelectedContato(contatoId ?? '')
+  }, [open, contatoId])
+
   async function handleSubmit() {
     if (!descricao.trim()) {
-      toast.error('Informe uma descrição')
+      toast.error('Informe uma descrição.')
       return
     }
     setSaving(true)
@@ -78,7 +86,7 @@ export function InteracaoDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Registrar interação</DialogTitle>
-          <DialogDescription>Registre o contato realizado com a loja.</DialogDescription>
+          <DialogDescription>Registre a interação realizada com a loja ou com o contato.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
@@ -99,7 +107,7 @@ export function InteracaoDialog({
           {contatos.length > 0 && (
             <div className="space-y-1.5">
               <Label>Contato da loja (opcional)</Label>
-              <Select value={selectedContato} onValueChange={setSelectedContato}>
+              <Select value={selectedContato || 'none'} onValueChange={(value) => setSelectedContato(value === 'none' ? '' : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um contato" />
                 </SelectTrigger>

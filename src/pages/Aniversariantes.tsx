@@ -17,8 +17,15 @@ import { BrindeDialog } from '@/components/brinde-dialog'
 import { InteracaoDialog } from '@/components/interacao-dialog'
 import { useData } from '@/context/DataContext'
 import { useAuth } from '@/context/AuthContext'
-import { formatDataBR, filterAniversariantes, type Aniversariante, type AniversarioFiltro } from '@/lib/aniversario'
-import { isBirthdayWithinRange } from '@/lib/aniversario'
+import {
+  birthdayAge,
+  filterAniversariantes,
+  formatBirthdayOccurrence,
+  isBirthdayWithinRange,
+  sortByNextBirthday,
+  type Aniversariante,
+  type AniversarioFiltro,
+} from '@/lib/aniversario'
 import { MSG_LOJA_ANIVERSARIO, MSG_CONTATO_ANIVERSARIO } from '@/lib/whatsapp'
 import { DateRangeFilter } from '@/components/date-range-filter'
 
@@ -74,6 +81,7 @@ export function Aniversariantes() {
             lojaId: l.id,
             lojaNome: l.nome_fantasia,
             telefone: c.whatsapp,
+            hobby: c.hobby,
             vendedorNome: l.vendedor?.nome,
             vendedorId: l.vendedor_responsavel_id ?? undefined,
           })
@@ -88,13 +96,15 @@ export function Aniversariantes() {
     [minhasLojas],
   )
 
-  const filtrados = filterAniversariantes(lista, filtro).filter((a) => {
-    const matchV = !fVendedor || a.vendedorId === fVendedor
-    const matchC = !fCidade || minhasLojas.find((l) => l.id === a.lojaId)?.cidade === fCidade
-    const matchT = !fTipo || a.tipo === fTipo
-    const matchDate = filtro !== 'personalizado' || isBirthdayWithinRange(a, dataInicio, dataFim)
-    return matchV && matchC && matchT && matchDate
-  })
+  const filtrados = sortByNextBirthday(
+    filterAniversariantes(lista, filtro).filter((a) => {
+      const matchV = !fVendedor || a.vendedorId === fVendedor
+      const matchC = !fCidade || minhasLojas.find((l) => l.id === a.lojaId)?.cidade === fCidade
+      const matchT = !fTipo || a.tipo === fTipo
+      const matchDate = filtro !== 'personalizado' || isBirthdayWithinRange(a, dataInicio, dataFim)
+      return matchV && matchC && matchT && matchDate
+    }),
+  )
 
   const lojaCidade = (lojaId?: string) => minhasLojas.find((l) => l.id === lojaId)?.cidade ?? '-'
 
@@ -102,83 +112,101 @@ export function Aniversariantes() {
     <div>
       <PageHeader title="Aniversariantes" description="Aniversários de lojas e contatos." />
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        <Select value={filtro} onValueChange={(v) => setFiltro(v as AniversarioFiltro)}>
-          <SelectTrigger className="sm:w-44">
-            <SelectValue placeholder="Período" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="hoje">Hoje</SelectItem>
-            <SelectItem value="7dias">Próximos 7 dias</SelectItem>
-            <SelectItem value="30dias">Próximos 30 dias</SelectItem>
-            <SelectItem value="mes">Mês atual</SelectItem>
-            <SelectItem value="personalizado">Período personalizado</SelectItem>
-            <SelectItem value="todos">Todos</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+        <div className="space-y-1">
+          <span className="block text-[11px] font-medium text-muted-foreground">Período</span>
+          <Select value={filtro} onValueChange={(v) => setFiltro(v as AniversarioFiltro)}>
+            <SelectTrigger className="sm:w-48" aria-label="Período dos aniversários">
+              <SelectValue placeholder="Selecione o período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="hoje">Hoje</SelectItem>
+              <SelectItem value="7dias">Próximos 7 dias</SelectItem>
+              <SelectItem value="30dias">Próximos 30 dias</SelectItem>
+              <SelectItem value="mes">Mês atual</SelectItem>
+              <SelectItem value="personalizado">Período personalizado</SelectItem>
+              <SelectItem value="todos">Todos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         {filtro === 'personalizado' && (
           <DateRangeFilter inicio={dataInicio} fim={dataFim} onInicioChange={setDataInicio} onFimChange={setDataFim} label="Aniversário" />
         )}
         {isAdmin && (
-          <Select value={fVendedor || 'todos'} onValueChange={(value) => setFVendedor(value === 'todos' ? '' : value)}>
-            <SelectTrigger className="sm:w-48">
-              <SelectValue placeholder="Vendedor" />
+          <div className="space-y-1">
+            <span className="block text-[11px] font-medium text-muted-foreground">Vendedor</span>
+            <Select value={fVendedor || 'todos'} onValueChange={(value) => setFVendedor(value === 'todos' ? '' : value)}>
+              <SelectTrigger className="sm:w-48" aria-label="Vendedor">
+                <SelectValue placeholder="Selecione o vendedor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                {vendedores.map((v) => (
+                  <SelectItem key={v.id} value={v.id}>
+                    {v.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        <div className="space-y-1">
+          <span className="block text-[11px] font-medium text-muted-foreground">Cidade</span>
+          <Select value={fCidade || 'todas'} onValueChange={(value) => setFCidade(value === 'todas' ? '' : value)}>
+            <SelectTrigger className="sm:w-44" aria-label="Cidade">
+              <SelectValue placeholder="Selecione a cidade" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="todos">Todos</SelectItem>
-              {vendedores.map((v) => (
-                <SelectItem key={v.id} value={v.id}>
-                  {v.nome}
+              <SelectItem value="todas">Todas</SelectItem>
+              {cidades.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        )}
-        <Select value={fCidade || 'todas'} onValueChange={(value) => setFCidade(value === 'todas' ? '' : value)}>
-          <SelectTrigger className="sm:w-44">
-            <SelectValue placeholder="Cidade" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todas">Todas</SelectItem>
-            {cidades.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={fTipo || 'todos'} onValueChange={(value) => setFTipo(value === 'todos' ? '' : value)}>
-          <SelectTrigger className="sm:w-40">
-            <SelectValue placeholder="Tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos</SelectItem>
-            <SelectItem value="loja">Loja</SelectItem>
-            <SelectItem value="contato">Contato</SelectItem>
-          </SelectContent>
-        </Select>
+        </div>
+        <div className="space-y-1">
+          <span className="block text-[11px] font-medium text-muted-foreground">Tipo</span>
+          <Select value={fTipo || 'todos'} onValueChange={(value) => setFTipo(value === 'todos' ? '' : value)}>
+            <SelectTrigger className="sm:w-40" aria-label="Tipo de aniversariante">
+              <SelectValue placeholder="Selecione o tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              <SelectItem value="loja">Loja</SelectItem>
+              <SelectItem value="contato">Contato</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {filtrados.length === 0 ? (
         <EmptyState icon={<Cake className="h-8 w-8" />} title="Nenhum aniversariante no período selecionado" />
       ) : (
-        <div className="space-y-3">
+        <Card className="overflow-hidden bg-white">
+          <CardContent className="divide-y p-0">
           {filtrados.map((a, i) => (
-            <Card key={i} className="bg-white">
-              <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div key={`${a.tipo}-${a.contatoId ?? a.lojaId}-${i}`} className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-brand-black">{a.nome}</span>
                     <StatusBadge value={a.tipo === 'loja' ? 'loja' : 'contato'} />
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {formatDataBR(a.data)} · {a.lojaNome} · {lojaCidade(a.lojaId)}
+                  <p className="mt-1 text-xs font-medium text-foreground">
+                    Aniversário: {formatBirthdayOccurrence(a)} · {birthdayAge(a)} {birthdayAge(a) === 1 ? 'ano' : 'anos'}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    Vendedor: {a.vendedorNome ?? '-'} · Tel: {a.telefone ?? '-'}
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    {a.lojaNome} · {lojaCidade(a.lojaId)}
                   </p>
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    Vendedor: {a.vendedorNome ?? '-'} · WhatsApp: {a.telefone ?? '-'}
+                  </p>
+                  {a.tipo === 'contato' && (
+                    <p className="text-xs leading-5 text-muted-foreground">Hobby: {a.hobby ?? '-'}</p>
+                  )}
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center justify-end gap-2">
                   <Button
                     size="sm"
                     variant="accent"
@@ -208,10 +236,10 @@ export function Aniversariantes() {
                     <MessageSquare className="h-4 w-4" /> Interação
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+            </div>
           ))}
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       <WhatsAppDialog

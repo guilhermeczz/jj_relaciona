@@ -6,47 +6,47 @@
 
 @layer base {
   :root {
-    --background: 40 20% 98%;
+    --background: 43 28% 94%;
     --foreground: 0 0% 8%;
-    --card: 0 0% 100%;
+    --card: 45 25% 98%;
     --card-foreground: 0 0% 7%;
-    --popover: 0 0% 100%;
+    --popover: 45 25% 99%;
     --popover-foreground: 0 0% 7%;
     --primary: 0 0% 7%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 96%;
+    --secondary: 43 18% 91%;
     --secondary-foreground: 0 0% 7%;
-    --muted: 0 0% 96%;
+    --muted: 43 18% 91%;
     --muted-foreground: 0 0% 45%;
     --accent: 45 100% 50%;
     --accent-foreground: 0 0% 7%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 40 7% 89%;
-    --input: 40 7% 86%;
+    --border: 42 14% 83%;
+    --input: 42 14% 80%;
     --ring: 45 100% 50%;
     --radius: 0.9rem;
   }
 
   .dark {
-    --background: 225 14% 8%;
+    --background: 45 8% 15%;
     --foreground: 40 12% 94%;
-    --card: 225 12% 11%;
+    --card: 45 7% 19%;
     --card-foreground: 40 12% 94%;
-    --popover: 225 12% 12%;
+    --popover: 45 7% 20%;
     --popover-foreground: 40 12% 94%;
     --primary: 45 100% 50%;
     --primary-foreground: 0 0% 7%;
-    --secondary: 225 10% 17%;
+    --secondary: 45 6% 25%;
     --secondary-foreground: 40 12% 94%;
-    --muted: 225 10% 16%;
-    --muted-foreground: 220 8% 64%;
+    --muted: 45 6% 24%;
+    --muted-foreground: 43 8% 70%;
     --accent: 45 100% 50%;
     --accent-foreground: 0 0% 7%;
     --destructive: 0 63% 45%;
     --destructive-foreground: 0 0% 100%;
-    --border: 225 9% 21%;
-    --input: 225 9% 25%;
+    --border: 45 6% 31%;
+    --input: 45 6% 34%;
     --ring: 45 100% 50%;
   }
 
@@ -128,8 +128,8 @@
   background: #44464c;
 }
 
-/* Mantém componentes legados coerentes enquanto o tema usa tokens semânticos. */
-.dark .bg-white {
+/* Mantém superfícies claras e escuras suaves, sem branco ou preto absolutos. */
+.bg-white {
   background-color: hsl(var(--card));
 }
 
